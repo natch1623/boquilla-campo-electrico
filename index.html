@@ -1,0 +1,2359 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campo eléctrico en una boquilla de 34,5 kV</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 fill=%22%230A1633%22/%3E%3Cpath d=%22M16 3l3 10 10 3-10 3-3 10-3-10-10-3 10-3z%22 fill=%22%23E9CB7C%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/DrawSVGPlugin.min.js"></script>
+<style>
+:root{
+  /* Santuario: cielo, mármol y oro */
+  --abismo:#0A1633; --noche:#142A57; --cielo-borde:#2A4682;
+  --marmol:#F1EADC; --marmol-2:#E4DAC6; --veta:#C9BDA6;
+  --oro:#C9A043; --oro-claro:#E9CB7C; --bronce:#77570F;
+  --tinta:#18213F; --tinta-2:#3A4363; --marfil:#F2EBDC; --marfil-2:#CFC7B6;
+  --tierra:#2F64A8; --critico:#B3362B;
+  /* materiales de la boquilla (iguales en todas las escenas) */
+  --cobre:#C27637; --ceramica:#DCD8D0; --ceramica-borde:#4A4F63; --mylar:#2F8C78;
+  --aceite:#D2B04E; --aluminio:#9AA7BA; --pintura:#353941; --empaque:#1D1F24; --pegamento:#B79F72;
+  --ease-out:cubic-bezier(0.23,1,0.32,1); --ease-in-out:cubic-bezier(0.77,0,0.175,1);
+  --f-title:'Cinzel','Trajan Pro',Georgia,serif;
+  --f-body:'Source Sans 3','Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#050B1C}
+body{font-family:var(--f-body);-webkit-font-smoothing:antialiased}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;color:var(--tinta);
+  font-size:26px;line-height:1.42;font-variant-numeric:lining-nums tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- ambientes ---------- */
+.bg{position:absolute;inset:0;transition:opacity .6s var(--ease-in-out)}
+#bg-sky{background:radial-gradient(120% 90% at 50% 18%,#1B3468 0%,var(--noche) 38%,var(--abismo) 78%,#070F26 100%)}
+#bg-sky canvas,#bg-sky svg{position:absolute;inset:0;width:100%;height:100%}
+#bg-marble{background:var(--marmol) center/cover no-repeat;opacity:0}
+body.marble #bg-marble{opacity:1}
+body.marble #bg-sky{opacity:0}
+
+/* ---------- pórtico ---------- */
+#portico,#portico-ghost{position:absolute;inset:0 0 108px 0;pointer-events:none;transform-origin:50% 55%}
+#portico-ghost{opacity:0}
+#numeral{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-family:var(--f-title);font-weight:700;font-size:34px;
+  letter-spacing:.08em;color:#5E440A;pointer-events:none}
+
+
+/* ---------- escenas ---------- */
+#scenes{position:absolute;inset:0 0 108px 0}
+.scene{position:absolute;inset:0;visibility:hidden;opacity:0;transform-origin:50% 55%}
+.scene.on{visibility:visible;opacity:1}
+.scene h2{position:absolute;left:0;right:0;top:84px;margin:0;text-align:center;font-family:var(--f-title);font-weight:600;
+  font-size:50px;letter-spacing:.035em;line-height:1.1}
+.sky{color:var(--marfil)}
+.sky h2{color:var(--marfil)}
+.marble-scene h2{color:var(--tinta)}
+.scene svg.full{position:absolute;inset:0;width:1920px;height:972px;overflow:visible;pointer-events:none}
+.scene svg.full .pe{pointer-events:auto}
+.blk{position:absolute}
+.blk p{margin:0 0 .55em}
+.lead{font-size:28px;line-height:1.4}
+.small{font-size:21px;line-height:1.38}
+.note{font-size:20px;line-height:1.35;color:var(--tinta-2)}
+.sky .note{color:var(--marfil-2)}
+.src{font-size:19px;color:var(--tinta-2)}
+.sky .src{color:var(--marfil-2)}
+.k{font-weight:700}
+.num{font-variant-numeric:tabular-nums lining-nums;white-space:nowrap}
+.tag-pub,.tag-did{display:inline-block;font-size:18px;font-weight:700;border-radius:3px;padding:1px 8px;vertical-align:2px;letter-spacing:.02em}
+.tag-pub{background:#16325F;color:#F2EBDC}
+.tag-did{background:transparent;border:1.5px dashed currentColor}
+.sky .tag-pub{background:var(--oro-claro);color:#1A1606}
+h3{font-family:var(--f-title);font-weight:600;font-size:28px;margin:0 0 .35em;letter-spacing:.02em}
+
+/* placa de mármol con esquinas de armadura (solo en escenas celestes) */
+.plate{position:absolute;background:linear-gradient(160deg,#F6F0E4 0%,#ECE3D1 100%);color:var(--tinta);padding:30px 36px 26px;
+  border:1px solid #B79C5B;box-shadow:0 30px 60px -30px rgba(0,0,0,.65), inset 0 0 0 6px rgba(201,160,67,.12)}
+.plate::before,.plate::after{content:"";position:absolute;width:54px;height:54px;background:linear-gradient(135deg,#F3D98E,#B8892A 55%,#7A5A14);
+  clip-path:polygon(0 0,100% 0,100% 22%,40% 22%,22% 40%,22% 100%,0 100%)}
+.plate::before{left:-7px;top:-7px}
+.plate::after{right:-7px;bottom:-7px;transform:rotate(180deg)}
+.plate .note,.plate .src{color:var(--tinta-2)}
+.plate .tag-pub{background:#16325F;color:#F2EBDC}
+/* tabla de mármol (escenas claras): solo un filete de bronce */
+.tablet{position:absolute;border-top:3px double #8E6B1E;padding-top:16px}
+
+/* listas */
+ol.parts{list-style:none;margin:0;padding:0}
+ol.parts li{display:grid;grid-template-columns:40px 1fr;gap:10px;margin:0 0 11px;font-size:21px;line-height:1.32}
+ol.parts li b{font-weight:700}
+.badge{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--tinta);color:var(--marfil);font-weight:700;font-size:18px}
+ul.dots{margin:0;padding-left:1.05em}
+ul.dots li{margin:0 0 .4em}
+
+/* ecuaciones */
+.eqrow{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start;margin:0 0 22px}
+.eqrow .n{font-family:var(--f-title);font-weight:700;font-size:24px;color:#5E440A;padding-top:6px}
+.eq{font-size:33px;line-height:1.25;color:var(--tinta)}
+.eq .katex{font-size:1em}
+.eqrow .why{font-size:21px;color:var(--tinta-2);margin-top:4px;line-height:1.33}
+.eqbox{display:inline-block;border:2px solid #8E6B1E;padding:6px 14px;background:rgba(255,255,255,.35)}
+
+/* controles dentro de escenas */
+.seg{display:inline-flex;border:2px solid var(--tinta);border-radius:6px;overflow:hidden;background:rgba(255,255,255,.4)}
+.sky .seg{border-color:var(--oro-claro);background:rgba(10,22,51,.4)}
+.seg button{font:600 20px/1 var(--f-body);padding:11px 18px;min-height:44px;border:0;background:transparent;color:inherit;cursor:pointer}
+.seg button+button{border-left:2px solid var(--tinta)}
+.sky .seg button+button{border-left-color:var(--oro-claro)}
+.seg button[aria-pressed="true"]{background:var(--tinta);color:var(--marfil)}
+.sky .seg button[aria-pressed="true"]{background:var(--oro-claro);color:#1A1606}
+.plate .seg{border-color:var(--tinta);background:rgba(255,255,255,.4)}
+.plate .seg button+button{border-left-color:var(--tinta)}
+.plate .seg button[aria-pressed="true"]{background:var(--tinta);color:var(--marfil)}
+
+.readout{display:grid;grid-template-columns:auto auto auto;gap:6px 28px;font-size:22px;align-items:baseline}
+.readout dt{font-size:17px;color:var(--tinta-2);font-weight:600}
+.readout dd{margin:0;font-weight:700;font-size:25px}
+
+/* SVG: tipografía de etiquetas */
+svg text{font-family:var(--f-body)}
+.lbl{fill:var(--tinta);font-weight:600}
+.sky .lbl{fill:var(--marfil)}
+.lbl-dark{fill:var(--tinta);font-weight:600}
+.lbl-light{fill:var(--marfil);font-weight:600}
+.leader{stroke:var(--tinta);stroke-width:.06;fill:none}
+.sky .leader{stroke:var(--oro-claro)}
+
+/* ---------- capa de transiciones del Santuario ---------- */
+#fx{position:absolute;inset:0 0 108px 0;pointer-events:none;z-index:5;overflow:hidden}
+.door{position:absolute;top:0;bottom:0;width:50%;visibility:hidden;background-color:#E9E0CE;background-size:1920px 1080px;overflow:hidden}
+.door.l{left:0;background-position:0 0;box-shadow:inset -18px 0 34px -14px rgba(60,45,20,.55)}
+.door.r{right:0;background-position:-960px 0;box-shadow:inset 18px 0 34px -14px rgba(60,45,20,.55)}
+.door::before{content:"";position:absolute;inset:34px 30px;border:2px solid rgba(150,108,28,.75);outline:1px solid rgba(150,108,28,.35);outline-offset:9px}
+.door svg{position:absolute;top:0;height:100%;width:1920px}
+.door.l svg{left:0}
+.door.r svg{left:-960px}
+.seam{position:absolute;left:50%;top:0;bottom:0;width:8px;margin-left:-4px;visibility:hidden;
+  background:linear-gradient(180deg,rgba(243,217,142,0),#F3D98E 22%,#FFF6D8 50%,#F3D98E 78%,rgba(243,217,142,0))}
+#fx-cols{position:absolute;top:0;left:0;height:100%;width:2300px;visibility:hidden}
+#fx-const{position:absolute;inset:0;width:100%;height:100%;visibility:hidden}
+#relay{left:560px;top:290px;width:800px;text-align:center;visibility:hidden;padding:30px 40px 34px}
+#relay h3{font-size:58px;margin:6px 0 4px;letter-spacing:.05em}
+#relay p{margin:0;font-size:24px;color:var(--tinta-2)}
+#relay svg{display:block;margin:0 auto;width:560px;height:74px;overflow:visible}
+
+/* ---------- barra inferior (basamento) ---------- */
+#nav{position:absolute;left:0;right:0;bottom:0;height:108px;z-index:6;background:linear-gradient(180deg,#0E1C3F,#08122B);color:var(--marfil);
+  display:flex;align-items:center;justify-content:space-between;padding:0 28px;gap:20px;border-top:2px solid var(--oro);
+  box-shadow:inset 0 5px 0 -3px rgba(233,203,124,.35)}
+#nav .grp{display:flex;align-items:center;gap:10px}
+.nb{font:600 19px/1 var(--f-body);color:var(--marfil);background:rgba(255,255,255,.04);border:1.5px solid rgba(233,203,124,.55);
+  border-radius:6px;min-height:46px;padding:0 16px;display:inline-flex;align-items:center;gap:9px;cursor:pointer;
+  transition:background-color .15s ease,transform .16s var(--ease-out)}
+.nb svg{width:18px;height:18px;flex:none}
+.nb:active{transform:scale(.97)}
+@media (hover:hover) and (pointer:fine){.nb:hover{background:rgba(233,203,124,.14)}}
+.nb[disabled]{opacity:.38;cursor:default}
+#steps-ind{font-size:19px;min-width:96px;text-align:center;color:var(--marfil-2)}
+#steps-ind b{color:var(--marfil)}
+#stairs{position:relative;width:820px;height:96px}
+#stairs svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.star-btn{position:absolute;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;border:0;background:transparent;cursor:pointer;padding:0}
+.star-lbl{position:absolute;font:600 15px/1 var(--f-body);color:var(--marfil-2);transform:translateX(-50%);white-space:nowrap;pointer-events:none}
+#speaker{font:600 17px/1.2 var(--f-body);color:var(--marfil-2);text-align:right;min-width:150px}
+#speaker b{display:block;font-family:var(--f-title);font-size:21px;color:var(--oro-claro);letter-spacing:.03em}
+
+:focus{outline:none}
+:focus-visible{outline:3px solid var(--oro-claro);outline-offset:3px;border-radius:4px}
+.marble-scene :focus-visible,.plate :focus-visible{outline-color:#1F55B0}
+.slider-knob:focus-visible{outline:none}
+.slider-knob:focus-visible .knob-ring{stroke:#1F55B0;stroke-width:.09}
+
+/* ---------- respaldo (diálogo) ---------- */
+#backup{position:absolute;inset:40px 90px 140px;background:var(--marmol);color:var(--tinta);border:1px solid #B79C5B;display:none;
+  box-shadow:0 40px 90px -20px rgba(0,0,0,.8);z-index:20}
+#backup.open{display:grid;grid-template-columns:300px 1fr}
+#backup nav{background:#0E1C3F;padding:34px 22px;display:flex;flex-direction:column;gap:8px}
+#backup nav h2{font-family:var(--f-title);color:var(--oro-claro);font-size:30px;margin:0 0 14px;font-weight:600}
+#backup nav button{font:600 20px/1.2 var(--f-body);text-align:left;color:var(--marfil);background:transparent;border:1.5px solid transparent;border-radius:6px;padding:11px 14px;cursor:pointer;min-height:46px}
+#backup nav button[aria-selected="true"]{border-color:var(--oro-claro);background:rgba(233,203,124,.12)}
+#backup .pane{padding:40px 56px;overflow:auto;font-size:23px;line-height:1.45}
+#backup .pane h3{font-size:32px}
+#backup .pane table{border-collapse:collapse;font-size:21px;margin:10px 0 18px}
+#backup .pane th,#backup .pane td{border-bottom:1px solid #CDBF9F;padding:8px 14px;text-align:left;vertical-align:top}
+#backup .close{position:absolute;right:18px;top:16px}
+#backup .nb{color:var(--tinta);border-color:#8E6B1E;background:#fff8}
+#scrim{position:absolute;inset:0;background:rgba(3,8,20,.6);display:none;z-index:19}
+#scrim.open{display:block}
+
+@media (prefers-reduced-motion:reduce){
+  .bg{transition:opacity .2s linear}
+  .nb{transition:background-color .15s ease}
+  .nb:active{transform:none}
+}
+
+/* ===== Extensiones de Codex (escenas II, IV, V, VI y IX) — fuente: codex/escenas-extra.css ===== */
+/* Extensiones Santuario. Todas las medidas pertenecen al escenario 1920 × 1080. */
+#s4 .eqrow:nth-child(2),
+#s4 .eqrow:nth-child(3){margin-bottom:36px}
+#s4 .boq-derivation{position:absolute;inset:0;width:1920px;height:972px;pointer-events:none;overflow:visible}
+#s4 .boq-derivation-line{fill:none;stroke:var(--oro);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+#s4 .boq-extra-label{font:600 18px var(--f-body);fill:var(--bronce);paint-order:stroke;stroke:var(--marmol);stroke-width:5px;stroke-linejoin:round}
+#s5 .boq-voltage-counter{display:inline-flex;flex-direction:column;justify-content:center;vertical-align:middle;width:148px;margin-left:12px;padding:4px 0 4px 10px;border-left:2px solid var(--oro);line-height:1.2;color:var(--tinta)}
+#s5 .boq-voltage-counter span{font-size:18px;color:var(--tinta-2);margin-bottom:3px}
+#s5 .boq-voltage-counter b{font-size:24px;white-space:nowrap;font-variant-numeric:tabular-nums lining-nums}
+#s5 .boq-ground{fill:none;stroke:var(--tierra);stroke-width:2;stroke-linecap:square;pointer-events:none}
+#s6 .boq-mesh-cycle{position:absolute;left:960px;top:680px;width:850px;height:260px;overflow:visible;pointer-events:none}
+#s6 .boq-cycle-title{font:600 21px var(--f-body);fill:var(--oro-claro);letter-spacing:.01em}
+#s6 .boq-cycle-caption{font:400 18px var(--f-body);fill:var(--marfil-2);text-anchor:end}
+#s6 .boq-cycle-node rect{fill:var(--noche);stroke:var(--oro);stroke-width:1.5}
+#s6 .boq-cycle-text{font:600 22px var(--f-body);fill:var(--marfil);text-anchor:middle}
+#s6 .boq-cycle-decision rect{stroke:var(--oro-claro);stroke-dasharray:5 4}
+#s6 .boq-cycle-result rect{fill:var(--oro-claro);stroke:var(--oro-claro)}
+#s6 .boq-cycle-result .boq-cycle-text{fill:var(--tinta)}
+#s6 .boq-cycle-arrow{fill:none;stroke:var(--oro-claro);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+#s6 .boq-cycle-branch{font:600 18px var(--f-body);fill:var(--oro-claro)}
+</style>
+</head>
+<body>
+<div id="stage" role="application" aria-roledescription="presentación" aria-label="Distribución del campo eléctrico en una boquilla de baja tensión de un transformador de potencia">
+  <div class="bg" id="bg-sky" aria-hidden="true"><canvas id="stars" width="1920" height="1080"></canvas><svg id="constel" viewBox="0 0 1920 1080"></svg></div>
+  <div class="bg" id="bg-marble" aria-hidden="true"></div>
+
+  <svg id="portico" viewBox="0 0 1920 972" aria-hidden="true"></svg>
+  <svg id="portico-ghost" viewBox="0 0 1920 972" aria-hidden="true"></svg>
+  <div id="numeral" aria-hidden="true">I</div>
+
+  <main id="scenes">
+
+<!-- ======================= I ======================= -->
+<section class="scene sky" id="s1" data-ambient="sky" aria-label="Escena 1">
+  <h2>La boquilla en el transformador</h2>
+  <svg class="full" id="sv1" viewBox="0 0 10 10" role="img" aria-label="Transformador de potencia con sus boquillas; acercamiento a una boquilla del lado de 34,5 kV"></svg>
+  <div class="blk" id="s1-a" style="left:150px;top:640px;width:640px" data-step="0">
+    <p class="lead">La boquilla lleva el conductor del devanado, que está a tensión, a través de la tapa del tanque, que está a tierra.</p>
+  </div>
+  <div class="blk plate" id="s1-b" style="left:1130px;top:300px;width:640px" data-step="2">
+    <h3>El problema</h3>
+    <p class="small">Entre el conductor y la brida aterrizada hay apenas unos centímetros de aislamiento radial. Ese espacio soporta el <b>esfuerzo dieléctrico</b>, es decir, la intensidad del campo eléctrico.</p>
+    <p class="small">Según los autores, las boquillas suelen ser el elemento con <b>mayor riesgo de falla</b> del transformador.</p>
+    <p class="src">Pregunta del artículo: ¿dónde se concentra el campo eléctrico dentro de la boquilla?</p>
+  </div>
+</section>
+
+<!-- ======================= II ======================= -->
+<section class="scene sky" id="s2" data-ambient="sky" aria-label="Escena 2">
+  <h2>El caso de estudio</h2>
+  <svg class="full" id="sv2" viewBox="0 0 10 10" role="img" aria-label="Vista exterior de la boquilla H-J con la parte en aire y la parte sumergida en aceite"></svg>
+  <div class="plate" style="left:1010px;top:170px;width:800px" data-step="0">
+    <h3>Transformador de 30 MVA, 115/34,5 kV</h3>
+    <p class="small">Boquilla <b>sólida marca H-J</b>, instalada en el lado de <b>34,5 kV</b>. Tensión nominal, sin carga.</p>
+    <p class="src" data-step="0">J. E. Alejandro-León, J. C. Olivares-Galván, J. L. Hernández-Ávila y R. Ocón-Valdez. <i>Ingeniería Investigación y Tecnología</i>, XXIV(3), 2023. doi:10.22201/fi.25940732e.2023.24.3.024</p>
+    <p class="small" data-step="0" style="margin-top:8px"><b>Objetivo:</b> calcular el campo eléctrico de la boquilla e identificar las zonas de mayor esfuerzo eléctrico como base para estudiar descargas parciales.</p>
+    <div data-step="3" style="margin:16px 0 0;border-top:1px solid #CDBF9F;padding-top:12px">
+      <svg viewBox="0 0 700 92" width="700" height="92" aria-label="Comparación de tensiones: 115 kV frente a 34,5 kV">
+        <rect x="150" y="8" width="520" height="30" fill="#16325F"/><text x="140" y="31" text-anchor="end" class="lbl-dark" font-size="21">115 kV</text>
+        <rect x="150" y="52" width="156" height="30" fill="#B8892A"/><text x="140" y="75" text-anchor="end" class="lbl-dark" font-size="21">34,5 kV</text>
+        <text x="320" y="75" class="lbl-dark" font-size="19" font-weight="400">lado de esta boquilla</text>
+      </svg>
+      <p class="small" style="margin-top:6px">Aquí, «baja tensión» es relativo: se refiere al lado de 34,5 kV frente al de 115 kV, no a una instalación de baja tensión.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= III ======================= -->
+<section class="scene marble-scene" id="s3" data-ambient="marble" aria-label="Escena 3">
+  <h2>Anatomía y materiales</h2>
+  <svg class="full" id="sv3" viewBox="0 0 10 10" role="img" aria-label="Corte longitudinal y despiece de la boquilla"></svg>
+  <div class="tablet" style="left:1290px;top:170px;width:540px" data-step="1">
+    <ol class="parts" aria-label="Componentes según la numeración de la figura 3 del artículo">
+      <li><span class="badge">4</span><span><b>Barra central de cobre</b>, Ø 1,625 in. Lleva la corriente del devanado a la línea.</span></li>
+      <li><span class="badge">2</span><span><b>Aceite próximo a la barra</b>. Aísla y refrigera; ε<sub>r</sub> = 2,3.</span></li>
+      <li><span class="badge">1</span><span><b>Tubo de Mylar</b> (poliéster, rigidez dieléctrica de 133 kV/mm). Divide el ducto de aceite en dos y sirve de barrera mecánica.</span></li>
+      <li><span class="badge">3</span><span><b>Aceite próximo a la cerámica</b>.</span></li>
+      <li><span class="badge">5</span><span><b>Cuerpo de cerámica</b>. Aislamiento principal; campanas de Ø 9,06 in.</span></li>
+      <li><span class="badge">6</span><span><b>Brida de montaje de aluminio, tuercas y arandelas</b>. Fijan la boquilla al tanque y la conectan a tierra.</span></li>
+      <li><span class="badge">7</span><span><b>Pegamento</b>. Une la brida con la cerámica.</span></li>
+      <li><span class="badge">8</span><span><b>Empaques de neopreno</b>. Dan el cierre hermético que impide la salida de aceite.</span></li>
+      <li><span class="badge">9</span><span><b>Pintura semiconductora</b>. Fija la referencia de tierra en la parte inferior.</span></li>
+    </ol>
+    <p class="src" style="margin-top:8px">Numeración de la Fig. 3 del artículo. Las proporciones radiales siguen la Fig. 10; el dibujo es un esquema.</p>
+  </div>
+</section>
+
+<!-- ======================= IV ======================= -->
+<section class="scene marble-scene" id="s4" data-ambient="marble" aria-label="Escena 4">
+  <h2>Fundamento físico</h2>
+  <div class="blk" style="left:130px;top:165px;width:960px">
+    <div class="eqrow" data-step="0"><span class="n">1</span><div>
+      <div class="eq" data-tex="\nabla\times\mathbf{E}=0\;\;\Rightarrow\;\;\mathbf{E}=-\nabla V">∇×E = 0 ⇒ E = −∇V</div>
+      <div class="why">Electrostática: no hay variación en el tiempo ni corriente. <b>V</b> es la energía por unidad de carga, en kV. <b>E</b> indica cuánto cambia V por unidad de longitud, en kV/mm (1 kV/mm = 10<sup>6</sup> V/m).</div></div></div>
+    <div class="eqrow" data-step="1"><span class="n">2</span><div>
+      <div class="eq" data-tex="\nabla\cdot\mathbf{D}=\rho_v,\qquad \mathbf{D}=\varepsilon\mathbf{E},\quad \varepsilon=\varepsilon_r\varepsilon_0">∇·D = ρ<sub>v</sub>,  D = εE,  ε = ε<sub>r</sub>ε<sub>0</sub></div>
+      <div class="why">Ley de Gauss y relación constitutiva. D en C/m², ρ<sub>v</sub> en C/m³, ε en F/m.</div></div></div>
+    <div class="eqrow" data-step="2"><span class="n">3</span><div>
+      <div class="eq" data-tex="\nabla\cdot(\varepsilon\nabla V)=-\rho_v\;\xrightarrow{\;\rho_v\,=\,0\;}\;\boxed{\nabla\cdot(\varepsilon\nabla V)=0}">∇·(ε∇V) = −ρ<sub>v</sub> → ∇·(ε∇V) = 0</div>
+      <div class="why">Al sustituir (1) en (2) se obtiene la ecuación de Poisson. Sin carga libre volumétrica, queda igual a cero. Esta forma sigue siendo válida aunque ε cambie de un material a otro.</div></div></div>
+    <div class="eqrow" data-step="3"><span class="n">4</span><div>
+      <div class="eq" data-tex="\varepsilon=\text{cte. en cada material}\;\Rightarrow\;\nabla^{2}V=0">ε constante en cada material ⇒ ∇²V = 0</div>
+      <div class="why">Dentro de cada material se reduce a la ecuación de Laplace, la ec. (6) del artículo, que es la que se resuelve.</div></div></div>
+    <div class="eqrow" data-step="3"><span class="n">5</span><div>
+      <div class="eq" data-tex="V_1=V_2,\qquad \varepsilon_1E_{1n}=\varepsilon_2E_{2n},\qquad E_{1t}=E_{2t}">V₁ = V₂,  ε₁E₁ₙ = ε₂E₂ₙ,  E₁ₜ = E₂ₜ</div>
+      <div class="why">Condiciones entre materiales (teoría del curso): D normal se conserva. Por eso, el material de menor ε soporta un campo mayor.</div></div></div>
+  </div>
+  <svg class="full" id="sv4" viewBox="0 0 1920 972" role="img" aria-label="Potencial y campo a lo largo de un radio"></svg>
+</section>
+
+<!-- ======================= V ======================= -->
+<section class="scene marble-scene" id="s5" data-ambient="marble" aria-label="Escena 5">
+  <h2>Condiciones del modelo</h2>
+  <svg class="full" id="sv5" viewBox="0 0 10 10" role="img" aria-label="Dominio del modelo axisimétrico con esfera de aire, capa de elementos infinitos, tanque y condiciones de potencial"></svg>
+  <div class="tablet" style="left:1180px;top:165px;width:650px">
+    <ul class="dots small" data-step="0">
+      <li><b>Estudio electrostático estacionario</b>: tensión nominal y sin carga.</li>
+      <li>El tanque se representa como un <b>dominio cilíndrico con aceite</b>. La barra se prolonga recta para simular el cable hacia la bobina.</li>
+    </ul>
+    <div data-step="1" class="small" style="margin-top:12px"><b>Dominio exterior.</b> Una esfera de 80 in de radio envuelve el modelo. Su interior representa el aire que rodea al transformador.</div>
+    <div data-step="2" class="small" style="margin-top:12px"><b>Capa de elementos infinitos</b> de 0,2 in. Estira matemáticamente el dominio para que el potencial se comporte como en un espacio abierto, sin que una frontera cercana lo deforme.</div>
+    <div data-step="3" style="margin-top:16px">
+      <div class="eq eqbox" data-tex="V_{\text{barra}}=\dfrac{34{,}5\ \text{kV}}{\sqrt{3}}\approx 19{,}9185\ \text{kV}">V(barra) = 34,5 kV/√3 ≈ 19,9185 kV</div>
+      <p class="note" style="margin-top:8px">Tensión fase a neutro aplicada a la barra central de cobre.</p>
+    </div>
+    <div data-step="4" class="small" style="margin-top:10px"><b>V = 0:</b> pared del tanque, brida de montaje y pintura semiconductora, que es la referencia en la parte inferior de la boquilla.</div>
+  </div>
+</section>
+
+<!-- ======================= VI ======================= -->
+<section class="scene sky" id="s6" data-ambient="sky" aria-label="Escena 6">
+  <h2>Método de elementos finitos</h2>
+  <div class="plate" style="left:150px;top:160px;width:720px;height:795px;padding:22px"></div>
+  <svg class="full" id="sv6" viewBox="0 0 10 10" role="img" aria-label="Malla ilustrativa en la zona de la brida"></svg>
+  <div class="blk" style="left:960px;top:175px;width:850px">
+    <p class="lead" data-step="1"><b>Discretizar</b> consiste en dividir el dominio continuo en elementos pequeños, en este caso triángulos en 2D.</p>
+    <p class="lead" data-step="2"><b>Los nodos</b> son los vértices compartidos entre elementos. En cada nodo se busca un valor de V; dentro del elemento, V se interpola:</p>
+    <div data-step="2" class="eq" style="color:var(--marfil);margin:-4px 0 16px" data-tex="V(\mathbf{x})\approx\sum_i N_i(\mathbf{x})\,V_i\;\;\Rightarrow\;\;[K]\{V\}=\{0\}">V(x) ≈ Σ Nᵢ(x)Vᵢ ⇒ [K]{V} = {0}</div>
+    <p class="lead" data-step="3"><b>La malla</b> es el conjunto de elementos y nodos. Los autores la refinan en la barra de cobre, las tuercas, las arandelas y la brida, que son las regiones de interés.</p>
+    <div data-step="3" class="small" style="margin-top:6px">
+      <span class="tag-pub">Artículo</span> Malla 3D «normal» de 63 718 elementos; malla 2D axisimétrica «extrafina» de 174 491 elementos. El mallado adaptativo parte de una malla gruesa, resuelve, estima el error y refina hasta que el resultado converge.
+    </div>
+  </div>
+</section>
+
+<!-- ======================= VII ======================= -->
+<section class="scene marble-scene" id="s7" data-ambient="marble" aria-label="Escena 7">
+  <h2>Distribución del potencial</h2>
+  <div class="blk" style="left:150px;top:150px"><div class="seg" role="group" aria-label="Capa del mapa" data-seg="7">
+    <button type="button" data-mode="geo" aria-pressed="true">Geometría</button><button type="button" data-mode="V" aria-pressed="false">Potencial V</button><button type="button" data-mode="E" aria-pressed="false">Campo |E|</button></div></div>
+  <svg class="full" id="sv7" viewBox="0 0 1920 972" role="img" aria-label="Mapa de potencial con equipotenciales y dirección del campo"></svg>
+  <div class="tablet" style="left:1010px;top:170px;width:800px">
+    <p class="small" data-step="1">El potencial vale <b class="num">19,9185 kV</b> en la barra y desciende hacia las partes a tierra, que están a <b>0 V</b>.</p>
+    <p class="small" data-step="2"><b>Equipotenciales</b> (líneas finas): son concéntricas al conductor y nunca cruzan los electrodos aterrizados. Se <b>aprietan junto a la brida</b>, y ahí V cambia más rápido.</p>
+    <p class="small" data-step="3"><b>Flechas de E</b>: son perpendiculares a las equipotenciales y van del mayor al menor potencial. Aquí solo indican dirección.</p>
+    <p class="small" data-step="4" style="border-left:4px solid var(--critico);padding-left:14px">El mayor potencial está en la barra. El mayor campo está donde V cambia más rápido: <b>son magnitudes distintas</b>. Dentro del conductor, E = 0.</p>
+    <p class="note" data-step="1"><span class="tag-did">Esquema didáctico</span> Interpolación geométrica que reproduce cualitativamente las Fig. 7 y 8. No es una solución de la ecuación de Laplace ni un resultado de COMSOL.</p>
+  </div>
+</section>
+
+<!-- ======================= VIII ======================= -->
+<section class="scene marble-scene" id="s8" data-ambient="marble" aria-label="Escena 8">
+  <h2>Región de mayor campo</h2>
+  <div class="blk" style="left:150px;top:150px"><div class="seg" role="group" aria-label="Capa del mapa" data-seg="8">
+    <button type="button" data-mode="geo" aria-pressed="false">Geometría</button><button type="button" data-mode="V" aria-pressed="false">Potencial V</button><button type="button" data-mode="E" aria-pressed="true">Campo |E|</button></div></div>
+  <svg class="full" id="sv8" viewBox="0 0 1920 972" role="img" aria-label="Mapa del campo eléctrico, corte radial y perfil de campo"></svg>
+  <div class="blk" style="left:1010px;top:640px;width:820px" data-step="2">
+    <dl class="readout" id="s8-read">
+      <div><dt>Longitud de arco s</dt><dd id="rd-s">0,00 in</dd></div>
+      <div><dt>Material</dt><dd id="rd-m">Aire exterior</dd></div>
+      <div><dt>|E| (lectura Fig. 10)</dt><dd id="rd-e">≈ 0,00 kV/mm</dd></div>
+    </dl>
+    <p class="note" style="margin-top:6px">Mueve el marcador del corte radial (arrástralo o usa ↑ ↓). La gráfica es una <b>reconstrucción aproximada</b> de la Fig. 10 hecha por lectura visual; el artículo no publica los datos tabulados.</p>
+  </div>
+  <div class="blk" style="left:1010px;top:842px;width:820px" data-step="3">
+    <p class="small" style="border-left:4px solid var(--critico);padding-left:14px;margin:0">El aceite pegado a la barra tiene la menor permitividad (ε<sub>r</sub> = 2,3). Como ε₁E₁ₙ = ε₂E₂ₙ, ahí el campo es el mayor: <b>≈ 2 kV/mm</b> según el texto (≈ 1,8 en la curva). Un |E| alto <b>no prueba</b> una descarga: el riesgo depende de burbujas, humedad o partículas, que el artículo no modela.</p>
+  </div>
+</section>
+
+<!-- ======================= IX ======================= -->
+<section class="scene sky" id="s9" data-ambient="sky" aria-label="Escena 9">
+  <h2>Modelo 3D y 2D axisimétrico</h2>
+  <div class="blk" style="left:150px;top:808px;width:760px" data-step="1">
+    <div class="eq" style="color:var(--marfil);font-size:28px" data-tex="\frac{1}{r}\frac{\partial}{\partial r}\!\left(\varepsilon r\frac{\partial V}{\partial r}\right)+\frac{\partial}{\partial z}\!\left(\varepsilon\frac{\partial V}{\partial z}\right)=0">(1/r)∂/∂r(εr ∂V/∂r) + ∂/∂z(ε ∂V/∂z) = 0</div>
+    <p class="note" style="margin-top:6px">Si nada depende del ángulo φ, la ecuación 3D se reduce al plano (r, z). Al girar el perfil 360° se recupera el volumen.</p>
+  </div>
+  <div class="plate" style="left:980px;top:150px;width:850px;height:800px" id="s9-plate" data-step="2">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h3 style="margin:0">Comparación de modelos</h3>
+      <div class="seg" role="group" aria-label="Modelo mostrado" data-seg="9">
+        <button type="button" data-cmp="3d" aria-pressed="true">3D</button><button type="button" data-cmp="2d" aria-pressed="false">2D</button><button type="button" data-cmp="both" aria-pressed="false">Superponer</button></div>
+    </div>
+    <div style="height:428px"></div>
+    <div data-step="3">
+      <table class="small" style="border-collapse:collapse;width:100%;margin-top:4px">
+        <thead><tr><th style="text-align:left;padding:4px 8px;border-bottom:2px solid #8E6B1E"></th><th style="text-align:left;padding:4px 8px;border-bottom:2px solid #8E6B1E">3D</th><th style="text-align:left;padding:4px 8px;border-bottom:2px solid #8E6B1E">2D axisimétrico</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:4px 8px">Malla</td><td style="padding:4px 8px">«normal», 63 718 elem.</td><td style="padding:4px 8px">«extrafina», 174 491 elem.</td></tr>
+          <tr><td style="padding:4px 8px">Cómputo</td><td style="padding:4px 8px">≤ 7,0 min</td><td style="padding:4px 8px">&lt; 1,0 min</td></tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin:10px 0 4px"><span class="tag-pub">Valor reportado</span> Diferencia entre modelos de <b>0,05 %</b>, según los autores, que no detallan la métrica.</p>
+      <p class="note" style="margin:0">La axisimetría exige que geometría, materiales y condiciones de frontera no dependan del ángulo. Las orejas y los tornillos de la brida rompen esa simetría y el modelo 2D los idealiza.</p>
+    </div>
+  </div>
+  <svg class="full" id="sv9" viewBox="0 0 1920 972" role="img" aria-label="Revolución del perfil axisimétrico y comparación de modelos"></svg>
+</section>
+
+<!-- ======================= X ======================= -->
+<section class="scene sky" id="s10" data-ambient="sky" aria-label="Escena 10">
+  <h2>Interpretación de ingeniería</h2>
+  <svg class="full" id="sv10" viewBox="0 0 10 10" role="img" aria-label="Boquilla completa con la región crítica marcada"></svg>
+  <div class="blk" style="left:760px;top:175px;width:1060px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px">
+    <div class="plate" style="position:relative;padding:26px 26px 20px" data-step="1">
+      <h3>Dónde</h3>
+      <p class="small">En el <b>aceite que toca la barra central</b>, cerca de la <b>brida de montaje</b> aterrizada: <b class="num">≈ 2 kV/mm</b>.</p>
+      <p class="note">La causa es la geometría (conductor frente a tierra cercana) combinada con la baja permitividad del aceite.</p>
+    </div>
+    <div class="plate" style="position:relative;padding:26px 26px 20px" data-step="1">
+      <h3>Para qué</h3>
+      <p class="small">Sirve para ubicar zonas críticas antes de inspeccionar o rediseñar, y como base para estudiar el deterioro del aislamiento.</p>
+      <p class="note">El modelo 2D axisimétrico da prácticamente el mismo resultado que el 3D (0,05 %) en menos de 1 min, frente a ≤ 7 min.</p>
+    </div>
+    <div class="plate" style="position:relative;padding:26px 26px 20px" data-step="2">
+      <h3>Alcance</h3>
+      <p class="small">Es un estudio electrostático a tensión nominal y sin carga. Un campo máximo <b>no equivale</b> a una falla.</p>
+      <p class="note">Las <b>descargas parciales</b> quedan como trabajo futuro de los autores.</p>
+    </div>
+  </div>
+  <div class="blk note" style="left:760px;top:600px;width:1060px" data-step="2">
+    <b style="color:var(--marfil)">Limitaciones identificadas por el equipo:</b> el tanque se idealiza como un cilindro; solo se reporta la permitividad del aceite; no se aclara si 19,9185 kV es el valor eficaz o el pico; no hay validación experimental.
+  </div>
+  <div class="blk src" style="left:760px;top:780px;width:1060px;border-top:3px double rgba(233,203,124,.6);padding-top:14px" data-step="2">
+    <b style="color:var(--oro-claro);font-family:var(--f-title);letter-spacing:.03em">Fuente</b><br>
+    Alejandro-León, J. E., Olivares-Galván, J. C., Hernández-Ávila, J. L. y Ocón-Valdez, R. (2023). Distribución del campo eléctrico en una boquilla de baja tensión de un transformador de potencia. <i>Ingeniería Investigación y Tecnología, 24</i>(3), 1–8. https://doi.org/10.22201/fi.25940732e.2023.24.3.024
+  </div>
+</section>
+  </main>
+
+  <!-- capa de transiciones: puertas del templo, columnata, constelación y relevo -->
+  <div id="fx" aria-hidden="true">
+    <div class="door l"></div><div class="door r"></div><div class="seam"></div>
+    <svg id="fx-cols" viewBox="0 0 2300 972"></svg>
+    <svg id="fx-const" viewBox="0 0 1920 972"></svg>
+    <div id="relay" class="plate">
+      <svg viewBox="0 0 560 74"></svg>
+      <h3>Expositor 2</h3>
+      <p>Escenas VI a X: método, resultados e interpretación</p>
+    </div>
+  </div>
+
+  <!-- ======================= navegación ======================= -->
+  <nav id="nav" aria-label="Navegación de la presentación">
+    <div class="grp">
+      <button class="nb" id="b-prev" type="button" aria-label="Paso anterior (flecha izquierda)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13 3 6 10l7 7" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>Anterior</button>
+      <button class="nb" id="b-next" type="button" aria-label="Paso siguiente (flecha derecha)">Siguiente<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 3 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></button>
+      <div id="steps-ind" aria-live="polite">Paso <b>1</b>/1</div>
+    </div>
+    <div id="stairs"><svg id="stairs-svg" viewBox="0 0 820 96" aria-hidden="true"></svg></div>
+    <div class="grp">
+      <button class="nb" id="b-replay" type="button" aria-label="Repetir la secuencia actual (R)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10a6 6 0 1 0 2-4.5M4 3v4h4" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>Repetir</button>
+      <button class="nb" id="b-skip" type="button" aria-label="Saltar la secuencia: mostrar el estado final (S)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m3 4 7 6-7 6zM11 4l7 6-7 6z" fill="currentColor"/></svg>Saltar</button>
+      <button class="nb" id="b-backup" type="button" aria-haspopup="dialog" aria-label="Abrir material de respaldo (B)">Respaldo</button>
+      <button class="nb" id="b-fs" type="button" aria-label="Pantalla completa (F)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></button>
+      <div id="speaker"><b>Expositor 1</b>≈ 35 s</div>
+    </div>
+  </nav>
+
+  <div id="scrim"></div>
+  <section id="backup" role="dialog" aria-modal="true" aria-labelledby="bk-title">
+    <nav aria-label="Secciones de respaldo">
+      <h2 id="bk-title">Respaldo</h2>
+      <div role="tablist" aria-orientation="vertical" style="display:flex;flex-direction:column;gap:8px">
+        <button role="tab" aria-selected="true" aria-controls="bk-1" id="bt-1">Historia</button>
+        <button role="tab" aria-selected="false" aria-controls="bk-2" id="bt-2">Clasificación</button>
+        <button role="tab" aria-selected="false" aria-controls="bk-3" id="bt-3">Flujo en COMSOL</button>
+        <button role="tab" aria-selected="false" aria-controls="bk-4" id="bt-4">Lectura de la Fig. 10</button>
+        <button role="tab" aria-selected="false" aria-controls="bk-5" id="bt-5">Notas de rigor</button>
+      </div>
+    </nav>
+    <div>
+      <button class="nb close" id="bk-close" type="button" aria-label="Cerrar respaldo (Esc)">Cerrar</button>
+      <div class="pane" role="tabpanel" id="bk-1" aria-labelledby="bt-1">
+        <h3>Evolución de las boquillas</h3>
+        <table>
+          <tr><th>1890</th><td>Primeras boquillas sólidas: un conductor central rodeado de aislante. Por encima de 34,5 kV se volvían demasiado grandes y pesadas.</td></tr>
+          <tr><th>Desde 1908</th><td>Westinghouse y ASEA desarrollan las primeras boquillas con capacitancia.</td></tr>
+          <tr><th>Posguerra</th><td>El papel aglomerado con resina (RBP) llega hasta 69 kV; el papel impregnado en aceite (OIP), hasta 170 kV.</td></tr>
+          <tr><th>≈ 1950</th><td>Boquillas condensadoras de papel impregnado en resina (RIP), hasta 765 kV.</td></tr>
+          <tr><th>1991</th><td>Haefely impulsa la primera norma IEEE para la construcción de boquillas.</td></tr>
+        </table>
+        <p class="note">Fuente: introducción del artículo, que cita a Ellis (2011).</p>
+      </div>
+      <div class="pane" role="tabpanel" id="bk-2" aria-labelledby="bt-2" hidden>
+        <h3>Clasificación por construcción</h3>
+        <table>
+          <tr><th>Papel aglomerado con resina</th><td>Contiene mucho aire entre fibras; su uso se limita a baja tensión.</td></tr>
+          <tr><th>Papel impregnado en aceite</th><td>Papel poroso secado al vacío; se usa hasta los niveles de tensión más altos.</td></tr>
+          <tr><th>Papel impregnado en resina</th><td>Impregnación al vacío con resina epóxica; bajas pérdidas dieléctricas.</td></tr>
+          <tr><th>Sólidas</th><td>Solo conductor central y envolvente de porcelana o polímero; menos de 34,5 kV; sin graduación de campo.</td></tr>
+          <tr><th>Aisladas en aire</th><td>Aire a presión atmosférica entre el aislante y la barra.</td></tr>
+          <tr><th>Aisladas en gas</th><td>Gas presurizado (SF<sub>6</sub>) y una pantalla aterrada.</td></tr>
+          <tr><th>Aisladas en aceite</th><td>Ducto interior de aceite que aísla y refrigera; las más usadas en transformadores, hasta 34,5 kV. <b>Es el caso de estudio</b> (sólida con ducto de aceite y tubo de Mylar).</td></tr>
+        </table>
+      </div>
+      <div class="pane" role="tabpanel" id="bk-3" aria-labelledby="bt-3" hidden>
+        <h3>Flujo de trabajo (Fig. 4)</h3>
+        <p><b>Preprocesado:</b> tipo de estudio, geometría, materiales y propiedades, malla, condiciones de frontera. <b>Procesado:</b> simulación. <b>Posprocesado:</b> análisis de resultados.</p>
+        <table>
+          <tr><th>Geometría</th><td>Plano del fabricante H-J; se añade el tanque y los elementos cercanos a la parte en aceite.</td></tr>
+          <tr><th>Malla 3D</th><td>Tamaño «normal»: 456 elementos de vértice, 4400 de arista, 22 069 de contorno; total de 63 718 elementos; 2,73 s de construcción.</td></tr>
+          <tr><th>Malla 2D</th><td>Tamaño «extrafino»: total de 174 491 elementos. El artículo repite la etiqueta «contorno» en dos conteos.</td></tr>
+          <tr><th>Calidad</th><td>Se eliminan elementos de mala calidad (ángulos obtusos) y se refina en la barra, las tuercas, las arandelas y la brida.</td></tr>
+          <tr><th>Dominio</th><td>Esfera de 80 in con una capa de 0,2 in de elementos infinitos.</td></tr>
+          <tr><th>Cómputo</th><td>3D ≤ 7,0 min; 2D axisimétrico &lt; 1,0 min.</td></tr>
+        </table>
+      </div>
+      <div class="pane" role="tabpanel" id="bk-4" aria-labelledby="bt-4" hidden>
+        <h3>Lectura visual de la Fig. 10</h3>
+        <p class="note">Valores leídos a ojo de la figura publicada (eje en V/m × 10<sup>6</sup> = kV/mm). Incertidumbre aproximada de ±0,03 kV/mm y ±0,02 in.</p>
+        <table>
+          <tr><th>Tramo (s, in)</th><th>Material (rótulo del artículo)</th><th>|E| leído</th><th>Texto del artículo</th></tr>
+          <tr><td>0 a 2,45</td><td>Aire exterior</td><td>≈ 0</td><td>Sin variación</td></tr>
+          <tr><td>2,45 a 3,33</td><td>Cerámica</td><td>0,24 a 0,42</td><td>0,2 a 0,4 kV/mm</td></tr>
+          <tr><td>3,33 a 3,44</td><td>Aceite pegado a la cerámica</td><td>1,27 a 1,37</td><td>1,3 kV/mm</td></tr>
+          <tr><td>3,44 a 3,50</td><td>Tubo de Mylar</td><td>≈ 0,65</td><td>0,65 kV/mm</td></tr>
+          <tr><td>3,50 a 3,69</td><td>Aceite pegado a la barra</td><td>1,56 a 1,80</td><td>≈ 2 kV/mm</td></tr>
+          <tr><td>3,69 a 4,5</td><td>Barra central</td><td>cae a 0</td><td>No aplica</td></tr>
+        </table>
+        <p class="note">El tramo de la barra empieza en s ≈ 3,69 in porque 4,5 − 3,69 ≈ 0,81 in, que es el radio de una barra de Ø 1,625 in. En la figura, la curva desciende hasta s ≈ 3,87 in.</p>
+      </div>
+      <div class="pane" role="tabpanel" id="bk-5" aria-labelledby="bt-5" hidden>
+        <h3>Qué es del artículo y qué es didáctico</h3>
+        <ul class="dots">
+          <li><b>Del artículo:</b> datos del transformador y de la boquilla, materiales, ecuaciones (1) a (6), condiciones de frontera, conteos de malla, tiempos, valores de |E| (0,2 a 0,4; 1,3; 0,65; ≈ 2 kV/mm; zonas 1 y 2 con ≈ 1 kV/mm), 0,05 % de diferencia y trabajo futuro.</li>
+          <li><b>Didáctico, elaborado para esta presentación:</b> dibujos SVG de la boquilla y del transformador, mapas de color (interpolación geométrica para V; mapa construido con los valores reportados para |E|), malla ilustrativa, curva coaxial de la escena IV y reconstrucción de la Fig. 10.</li>
+          <li><b>Observaciones del equipo:</b> la curva de la Fig. 10 alcanza ≈ 1,8 × 10<sup>6</sup> V/m y el texto redondea a ≈ 2 kV/mm. El valor de 19,9185 kV es la tensión fase a neutro y el artículo no indica si es eficaz o pico. Solo se reporta ε<sub>r</sub> del aceite (2,3).</li>
+          <li>La forma general ∇·(ε∇V) = 0 y las condiciones entre materiales son teoría del curso; el artículo escribe directamente ∇²V = 0.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ===== Extensiones de Codex — fuente: codex/escenas-extra.js; se registran antes de que arranque el motor ===== */
+/* Extensiones de II, IV, V, VI y IX. Sin dependencias nuevas.
+   Todos los estados de los pasos pertenecen a su timeline y a B.reset.
+   La única secuencia autónoma es el selector 3D/2D, según CONTRATO.md. */
+window.BOQ_EXT = window.BOQ_EXT || [];
+window.BOQ_EXT.push(function (B) {
+  'use strict';
+  const g = B.gsap;
+  const q = (s, root) => root.querySelector(s);
+  const qa = (s, root) => Array.from(root.querySelectorAll(s));
+  const OPEN = 'inset(0% 0% 0% 0%)';
+  const CLOSED_X = 'inset(0% 100% 0% 0%)';
+  const CLOSED_Y = 'inset(0% 0% 100% 0%)';
+  const token = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const svgText = (root, x, y, value, cls) => {
+    const t = B.el('text', {x, y, class:cls || 'boq-extra-label'}, root);
+    t.textContent = value;
+    return t;
+  };
+
+  // II: se selecciona el grupo de cotas por su texto, no por el orden del SVG.
+  let dims, dimLines = [], dimLabels = [], dimDots = [], bars = [], side;
+  B.ready(2, sec => {
+    const label = qa('#sv2 text', sec).find(t => t.textContent.includes('41,38'));
+    dims = label && label.parentNode;
+    if (dims) {
+      dimLines = qa('path[stroke="#E9CB7C"]', dims);
+      dimLabels = qa('text', dims);
+      dimDots = qa('circle', dims);
+    }
+    const plate = q('.plate [data-step="3"] svg', sec);
+    if (plate) {
+      bars = qa('rect', plate);
+      side = qa('text', plate).find(t => t.textContent.includes('lado de esta boquilla'));
+    }
+  });
+  B.reset(2, () => {
+    B.hideStroke(dimLines);
+    g.set(dimLabels.concat(dimDots), {opacity:0});
+    g.set(bars, {scaleX:0, transformOrigin:'0% 50%'});
+    if (side) g.set(side, {opacity:0});
+  });
+  B.extend(2, 2, tl => {
+    B.drawStroke(tl, dimLines, {duration:0.6, stagger:0.08, ease:B.EIO}, 0);
+    tl.to(dimLabels.concat(dimDots), {opacity:1, duration:0.3, stagger:0.04, ease:B.EO}, 0.77);
+  });
+  B.extend(2, 3, tl => {
+    bars.forEach((bar, i) => tl.to(bar, {scaleX:1, duration:0.55, ease:B.EO}, 0.12 + i * 0.42));
+    if (side) tl.to(side, {opacity:1, duration:0.3, ease:B.EO}, 1.1);
+  });
+
+  // IV: dos carriles de derivación en el margen; el texto matemático se conserva.
+  let eqs = [], derivation = [], derivLabels = [], laplace, laplaceLabel, frame, layout4 = null;
+  B.ready(4, sec => {
+    const rows = qa('.eqrow', sec);
+    eqs = rows.map(row => q('.eq', row));
+    frame = q('.fbox', eqs[2]); // KaTeX ausente: el barrido funciona sobre el respaldo Unicode.
+    const sv = B.el('svg', {viewBox:'0 0 1920 972', class:'boq-derivation', 'aria-hidden':'true'}, sec);
+    const path = () => B.el('path', {class:'boq-derivation-line'}, sv);
+    derivation = [path(), path()];
+    derivLabels = [svgText(sv, 186, 0, 'sustituir (1) en (2)')];
+    laplace = path();
+    laplaceLabel = svgText(sv, 186, 0, 'ε constante por región');
+    // (Claude, integración) Las coordenadas se recalculan en cada reset: las fuentes web
+    // pueden terminar de cargar después de B.ready y desplazar las filas.
+    layout4 = () => {
+      const top = row => row.parentNode.offsetTop + row.offsetTop;
+      // Los codos pasan por debajo de los números de fila para no tacharlos.
+      const end = i => top(rows[i]) + eqs[i].offsetHeight + 4;
+      const y1 = end(0), y2 = end(1), y3 = end(2), y4 = end(3);
+      derivation[0].setAttribute('d', `M174 ${y1}H100V${y3}H170l-8 -5m8 5l-8 5`);
+      derivation[1].setAttribute('d', `M174 ${y2}H113V${y3 - 9}H159`);
+      derivLabels[0].setAttribute('y', top(rows[2]) - 10);
+      laplace.setAttribute('d', `M174 ${y3 + 12}H100V${y4}H170l-8 -5m8 5l-8 5`);
+      laplaceLabel.setAttribute('y', top(rows[3]) - 10);
+    };
+    layout4();
+  });
+  B.reset(4, () => {
+    if (layout4) layout4();
+    g.set(eqs, {clipPath:CLOSED_X});
+    B.hideStroke(derivation.concat(laplace || []));
+    g.set(derivLabels.concat(laplaceLabel || []), {opacity:0});
+    if (frame) g.set(frame, {borderColor:token('--tinta')});
+  });
+  [0, 1, 2, 3].forEach(k => B.extend(4, k, tl => {
+    const targets = k === 3 ? eqs.slice(3) : [eqs[k]];
+    tl.to(targets, {clipPath:OPEN, duration:0.6, stagger:0.08, ease:B.EO}, k === 2 ? 0.32 : 0.05);
+    if (k === 2) {
+      B.drawStroke(tl, derivation, {duration:0.6, stagger:0.07, ease:B.EIO}, 0);
+      tl.to(derivLabels, {opacity:1, duration:0.3, ease:B.EO}, 0.38);
+      if (frame) tl.fromTo(frame, {borderColor:token('--oro')}, {borderColor:token('--tinta'), duration:0.5, ease:B.EO, immediateRender:false}, 0.94);
+    }
+    if (k === 3) {
+      B.drawStroke(tl, laplace, {duration:0.55, ease:B.EIO}, 0);
+      tl.to(laplaceLabel, {opacity:1, duration:0.3, ease:B.EO}, 0.35);
+    }
+  }));
+
+  // V: lectura auxiliar; el valor y la notación originales de KaTeX son intactos.
+  let counterWrap, counter, grounds = [];
+  const voltage = {value:0};
+  const formatVoltage = value => value.toFixed(4).replace('.', ',') + ' kV';
+  B.ready(5, sec => {
+    const equation = q('.eqbox', sec);
+    counterWrap = document.createElement('span');
+    counterWrap.className = 'boq-voltage-counter';
+    counterWrap.setAttribute('aria-hidden', 'true');
+    const caption = document.createElement('span');
+    caption.textContent = 'Valor aplicado';
+    counter = document.createElement('b');
+    counter.textContent = formatVoltage(0);
+    counterWrap.append(caption, counter);
+    equation.after(counterWrap);
+    // Cada etiqueta V=0 contiene la guía del punto de la frontera al texto.
+    qa('#sv5 text', sec).filter(t => t.textContent.startsWith('V = 0:')).forEach(t => {
+      const leader = q('path[stroke="#2F64A8"]', t.parentNode);
+      if (!leader) return;
+      const pt = leader.getPointAtLength(leader.getTotalLength());
+      const symbol = B.el('g', {class:'boq-ground', 'aria-hidden':'true'}, t.parentNode);
+      // El tallo se ancla al extremo físico de la flecha, no a la etiqueta.
+      B.el('path', {d:`M${pt.x} ${pt.y}v10m-13 0h26m-4 6h-18m6 6h6`}, symbol);
+      grounds.push(symbol);
+    });
+  });
+  B.reset(5, () => {
+    voltage.value = 0;
+    if (counter) counter.textContent = formatVoltage(0);
+    if (counterWrap) g.set(counterWrap, {opacity:0});
+    g.set(grounds, {opacity:0, y:-5});
+  });
+  B.extend(5, 3, tl => {
+    if (!counter) return;
+    tl.to(counterWrap, {opacity:1, duration:0.3, ease:B.EO}, 0.15)
+      .to(voltage, {value:19.9185, duration:0.9, ease:B.EO,
+        onUpdate:() => { counter.textContent = formatVoltage(voltage.value); }}, 0.15)
+      // set también fija el final si el motor reconstruye sin callbacks.
+      .set(counter, {textContent:formatVoltage(19.9185)}, 1.05);
+  });
+  B.extend(5, 4, tl => {
+    tl.to(grounds, {opacity:1, y:0, duration:0.4, stagger:0.1, ease:B.EO}, 0.35);
+  });
+
+  // VI: diagrama didáctico finito; no se representa una simulación en ejecución.
+  let meshBoxes = [], meshArrows = [], meshLabels = [], meshDiagram;
+  B.ready(6, sec => {
+    meshDiagram = B.el('svg', {viewBox:'0 0 850 260', class:'boq-mesh-cycle', role:'img',
+      'aria-label':'Esquema didáctico del mallado adaptativo: partir de una malla gruesa, resolver y estimar el error; si no converge, refinar y resolver de nuevo; si converge, obtener el resultado.'}, sec);
+    svgText(meshDiagram, 0, 23, 'Ciclo de mallado adaptativo', 'boq-cycle-title');
+    svgText(meshDiagram, 850, 23, 'Esquema didáctico', 'boq-cycle-caption');
+    const box = (x, y, w, label, cls) => {
+      const node = B.el('g', {class:'boq-cycle-node ' + (cls || '')}, meshDiagram);
+      B.el('rect', {x, y, width:w, height:52, rx:5}, node);
+      svgText(node, x + w / 2, y + 33, label, 'boq-cycle-text');
+      meshBoxes.push(node);
+      return node;
+    };
+    box(0, 53, 190, 'malla gruesa');
+    box(220, 53, 190, 'resolver');
+    box(440, 53, 190, 'estimar error');
+    box(660, 53, 190, 'refinar');
+    box(440, 182, 190, '¿converge?', 'boq-cycle-decision');
+    box(700, 182, 150, 'resultado', 'boq-cycle-result');
+    const arrow = d => {
+      const a = B.el('path', {d, class:'boq-cycle-arrow'}, meshDiagram);
+      meshArrows.push(a);
+    };
+    arrow('M190 79H216m-7 -5l7 5-7 5');
+    arrow('M410 79H436m-7 -5l7 5-7 5');
+    arrow('M535 105V178m-5 -7l5 7 5-7');
+    // No: decisión → refinar. Sí: decisión → resultado.
+    arrow('M605 182V133H755V109m-5 7l5-7 5 7');
+    arrow('M755 53V39H315V49m-5 -7l5 7 5-7');
+    arrow('M630 208H696m-7 -5l7 5-7 5');
+    meshLabels.push(svgText(meshDiagram, 615, 158, 'No', 'boq-cycle-branch'));
+    meshLabels.push(svgText(meshDiagram, 653, 196, 'Sí', 'boq-cycle-branch'));
+  });
+  B.reset(6, () => {
+    if (meshDiagram) g.set(meshDiagram, {opacity:0});
+    g.set(meshBoxes, {opacity:0, scale:0.96, transformOrigin:'50% 50%'});
+    B.hideStroke(meshArrows);
+    g.set(meshLabels, {opacity:0});
+  });
+  B.extend(6, 3, tl => {
+    tl.to(meshDiagram, {opacity:1, duration:0.3, ease:B.EO}, 0);
+    // Orden explicativo: malla → resolver → error → decisión → refinar/resultado.
+    const reveal = (i, at) => tl.to(meshBoxes[i], {opacity:1, scale:1, duration:0.32, ease:B.EO}, at);
+    const stroke = (i, at) => B.drawStroke(tl, meshArrows[i], {duration:0.3, ease:B.EIO}, at);
+    reveal(0, 0.05); stroke(0, 0.19);
+    reveal(1, 0.35); stroke(1, 0.49);
+    reveal(2, 0.65); stroke(2, 0.79);
+    reveal(4, 0.95); stroke(3, 1.09);
+    reveal(3, 1.24); stroke(4, 1.39);
+    stroke(5, 1.45); reveal(5, 1.6);
+    tl.to(meshLabels, {opacity:1, duration:0.3, ease:B.EO}, 1.48);
+  });
+
+  // IX: la máscara es una capa visual; los botones conservan su lógica y ARIA.
+  let comparison, mask, maskTimeline = null, maskMode = '3d';
+  B.ready(9, sec => {
+    mask = q('#sv9 rect[x="-6"][width="6"][fill="#ECE3D1"]', sec);
+    comparison = mask && mask.ownerSVGElement.parentNode;
+    if (!mask) return;
+    // El recorte se aplica al semiplano completo: no se deforma la geometría.
+    const defs = B.el('defs', {}, mask.ownerSVGElement);
+    const cp = B.el('clipPath', {id:'boq-cmp-mask-clip', clipPathUnits:'userSpaceOnUse'}, defs);
+    const reveal = B.el('rect', {x:-6, y:-5, width:6, height:9}, cp);
+    mask.setAttribute('clip-path', 'url(#boq-cmp-mask-clip)');
+    qa('[data-cmp]', sec).forEach(button => button.addEventListener('click', () => {
+      const nextMode = button.dataset.cmp;
+      const from2d = maskMode === '2d', to2d = nextMode === '2d';
+      maskMode = nextMode;
+      if (B.RM || B.instant) {
+        if (maskTimeline) maskTimeline.kill();
+        g.set(reveal, {attr:{width:6}});
+        g.set(mask, {opacity:to2d ? 1 : 0});
+        return;
+      }
+      if (from2d === to2d && !(maskTimeline && maskTimeline.isActive())) return;
+      const running = maskTimeline && maskTimeline.isActive();
+      if (maskTimeline) maskTimeline.kill();
+      maskTimeline = g.timeline({defaults:{duration:0.35, ease:B.EO, overwrite:'auto'}});
+      // El listener original ya fijó la opacidad: este set ocurre en el mismo evento.
+      maskTimeline.set(mask, {opacity:1}, 0);
+      if (!running) maskTimeline.set(reveal, {attr:{width:from2d ? 6 : 0}}, 0);
+      maskTimeline.to(reveal, {attr:{width:to2d ? 6 : 0}}, 0)
+        .set(mask, {opacity:to2d ? 1 : 0}, 0.35);
+    }));
+    // Guardar el nodo evita buscar un clip perteneciente a otra escena al reiniciar.
+    mask.boqReveal = reveal;
+  });
+  B.reset(9, () => {
+    if (maskTimeline) { maskTimeline.kill(); maskTimeline = null; }
+    maskMode = '3d';
+    if (comparison) g.set(comparison, {clipPath:CLOSED_Y});
+    if (mask) {
+      g.set(mask, {opacity:0});
+      g.set(mask.boqReveal, {attr:{width:6}});
+    }
+  });
+  B.extend(9, 2, tl => {
+    if (comparison) tl.to(comparison, {clipPath:OPEN, duration:0.65, ease:B.EO}, 0.1);
+  });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){ try { APP(); } catch (err) { console.error('Error al iniciar la presentación', err); } });
+
+function APP(){
+'use strict';
+/* =====================================================================
+   0. Utilidades, GSAP (o sustituto inmediato) y movimiento reducido
+   ===================================================================== */
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches || /[?&]rm=1/.test(location.search);
+const NS = 'http://www.w3.org/2000/svg';
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+function el(tag, attrs, parent){
+  const e = document.createElementNS(NS, tag);
+  if (attrs) for (const k in attrs){ if (k === 'text') e.textContent = attrs[k]; else e.setAttribute(k, attrs[k]); }
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const fmt   = (v, d) => v.toFixed(d == null ? 2 : d).replace('.', ',');
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp  = (a, b, t) => a + (b - a) * t;
+function rng(seed){ let s = seed % 2147483647; if (s <= 0) s += 2147483646; return () => (s = s * 16807 % 2147483647, (s - 1) / 2147483646); }
+function toArr(t){
+  if (t == null) return [];
+  if (typeof t === 'string') return $$(t);
+  if (Array.isArray(t)) return t;
+  if (t instanceof NodeList || t instanceof HTMLCollection) return Array.from(t);
+  return [t];
+}
+/* Sustituto mínimo: si GSAP no carga (sin red), cada estado se aplica de inmediato. */
+function makeShim(){
+  const SKIP = {duration:1, ease:1, delay:1, stagger:1, onUpdate:1, onComplete:1, overwrite:1, transformOrigin:1, svgOrigin:1, immediateRender:1};
+  function apply(t, v){
+    toArr(t).forEach((o, i) => {
+      for (const k in v){
+        if (SKIP[k]) continue;
+        let val = v[k]; if (typeof val === 'function') val = val(i, o);
+        if (k === 'attr'){ for (const a in val) o.setAttribute(a, val[a]); continue; }
+        if (!(o instanceof Element)){ o[k] = val; continue; }
+        if (k === 'autoAlpha'){ o.style.opacity = val; o.style.visibility = val > 0 ? 'visible' : 'hidden'; continue; }
+        if (k === 'drawSVG'){ o.style.strokeDasharray = (val === 0 || val === '0%' || val === '0% 0%') ? '0 100000' : ''; continue; }
+        if (k === 'x' || k === 'y' || k === 'scale'){ o._tf = o._tf || {}; o._tf[k] = val; const f = o._tf;
+          o.style.transform = 'translate(' + (f.x || 0) + 'px,' + (f.y || 0) + 'px) scale(' + (f.scale == null ? 1 : f.scale) + ')'; continue; }
+        o.style[k] = val;
+      }
+    });
+    if (v.onUpdate) v.onUpdate(); if (v.onComplete) v.onComplete();
+  }
+  function TL(o){ this.ops = []; this.o = o || {}; this.done = false; }
+  const P = TL.prototype;
+  P.to = function(t, v){ this.ops.push(() => apply(t, v)); return this; };
+  P.set = P.to;
+  P.fromTo = function(t, a, b){ this.ops.push(() => apply(t, b)); return this; };
+  P.call = function(f, args){ this.ops.push(() => f.apply(null, args || [])); return this; };
+  P.add = function(x){ if (typeof x === 'function') this.ops.push(x); else if (x && x.ops) this.ops.push(() => x.progress(1)); return this; };
+  P.progress = function(p){ if (p === undefined) return 1; if (p >= 1 && !this.done){ this.done = true; this.ops.forEach(f => f()); if (this.o.onComplete) this.o.onComplete(); } return this; };
+  P.play = function(){ return this.progress(1); };
+  P.paused = function(){ return this; };
+  P.kill = function(){ return this; };
+  P.isActive = function(){ return false; };
+  return { isShim:true, timeline: o => new TL(o), set: (t, v) => apply(t, v), to: (t, v) => { apply(t, v); return new TL(); },
+           fromTo: (t, a, b) => { apply(t, b); return new TL(); }, registerPlugin(){}, killTweensOf(){} };
+}
+const gsap = window.gsap || makeShim();
+let EO = 'power3.out', EIO = 'power3.inOut';
+if (!gsap.isShim && window.CustomEase){
+  gsap.registerPlugin(window.CustomEase);
+  EO  = window.CustomEase.create('santuarioOut',   '0.23,1,0.32,1');
+  EIO = window.CustomEase.create('santuarioInOut', '0.77,0,0.175,1');
+}
+const HAS_DRAW = !gsap.isShim && !!window.DrawSVGPlugin;
+if (HAS_DRAW) gsap.registerPlugin(window.DrawSVGPlugin);
+function hideStroke(t){
+  toArr(t).forEach(e => {
+    if (HAS_DRAW) gsap.set(e, {drawSVG:'0% 0%'});
+    else { const L = e.getTotalLength ? e.getTotalLength() : 1000; e.style.strokeDasharray = L + ' ' + L; e.style.strokeDashoffset = L; }
+  });
+}
+function drawStroke(tl, t, vars, pos){
+  const arr = toArr(t);
+  if (HAS_DRAW) tl.to(arr, Object.assign({drawSVG:'0% 100%'}, vars), pos);
+  else tl.to(arr, Object.assign({strokeDashoffset:0}, vars), pos);
+}
+
+/* =====================================================================
+   1. Etiquetas editables de los diagramas
+   ===================================================================== */
+const L = {
+  hv:'Boquillas de 115 kV', lv:'Boquillas de 34,5 kV',
+  air:'Parte exterior, en aire', oil:'Parte sumergida, en aceite', bar:'barra de cobre, Ø 1,625 in',
+  len:'41,38 in (≈ 1,05 m)', bells:'Ø 9,06 in',
+  insetCap:'Detalle junto a la brida: orden radial del corte de la Fig. 10',
+  tank:'Tanque idealizado:\ncilindro con aceite', ext:'Barra prolongada\nhacia la bobina', axis:'Eje de simetría, r = 0',
+  sphere:'Aire: esfera de\n80 in de radio', layer:'Elementos infinitos, 0,2 in\n(espesor exagerado)',
+  vbar:'V = 19,9185 kV', g1:'V = 0: pared del tanque', g2:'V = 0: brida de montaje', g3:'V = 0: pintura\nsemiconductora',
+  meshCap:'Malla ilustrativa (esquema didáctico). No es la malla del artículo (Fig. 5).',
+  refine:'Refinamiento junto a la barra y la brida',
+  vmax:'V máx. = 19,9185 kV', crowd:'Equipotenciales apretadas: aquí |E| es mayor',
+  z1:'≈ 1 kV/mm', z2:'≈ 1 kV/mm', z3:'≈ 2 kV/mm, máximo', cut:'corte radial\ns = 0 en el aire',
+  crit:'Región crítica', critSub:'aceite junto a la barra, cerca de la brida'
+};
+
+/* =====================================================================
+   2. Definiciones SVG compartidas (materiales, escalas de color)
+   ===================================================================== */
+const CMAP = [[0,'#0B1640'],[0.25,'#1F4C8F'],[0.5,'#2E8C9A'],[0.75,'#D9A93F'],[1,'#F7EBC4']];
+const hex = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+const LUT = new Uint8ClampedArray(256 * 3);
+for (let i = 0; i < 256; i++){
+  const t = i / 255; let j = 0; while (j < CMAP.length - 2 && t > CMAP[j + 1][0]) j++;
+  const a = CMAP[j], b = CMAP[j + 1], u = (t - a[0]) / (b[0] - a[0]), ca = hex(a[1]), cb = hex(b[1]);
+  for (let c = 0; c < 3; c++) LUT[i * 3 + c] = Math.round(lerp(ca[c], cb[c], u));
+}
+const gdefs = el('svg', {width:0, height:0, style:'position:absolute', 'aria-hidden':'true', focusable:'false'}, document.body);
+gdefs.innerHTML = `<defs>
+ <linearGradient id="gPorc" x1="0" x2="1"><stop offset="0" stop-color="#8F8C86"/><stop offset=".22" stop-color="#D9D5CD"/><stop offset=".48" stop-color="#F6F3EC"/><stop offset=".75" stop-color="#CFCAC1"/><stop offset="1" stop-color="#7F7C77"/></linearGradient>
+ <linearGradient id="gCopper" x1="0" x2="1"><stop offset="0" stop-color="#7A431B"/><stop offset=".35" stop-color="#D58A47"/><stop offset=".5" stop-color="#F1B57A"/><stop offset=".75" stop-color="#B86A2E"/><stop offset="1" stop-color="#6E3A15"/></linearGradient>
+ <linearGradient id="gAlu" x1="0" x2="1"><stop offset="0" stop-color="#6E7889"/><stop offset=".4" stop-color="#C3CCD8"/><stop offset=".55" stop-color="#E9EEF4"/><stop offset="1" stop-color="#8C97A8"/></linearGradient>
+ <linearGradient id="gPaint" x1="0" x2="1"><stop offset="0" stop-color="#1E2127"/><stop offset=".45" stop-color="#4A4F59"/><stop offset="1" stop-color="#23262C"/></linearGradient>
+ <linearGradient id="gMylar" x1="0" x2="1"><stop offset="0" stop-color="#1D5F50"/><stop offset=".5" stop-color="#48AE96"/><stop offset="1" stop-color="#1D5F50"/></linearGradient>
+ <linearGradient id="gTank" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A3F70"/><stop offset="1" stop-color="#17264A"/></linearGradient>
+ <linearGradient id="gCol" x1="0" x2="1"><stop offset="0" stop-color="#A99D86"/><stop offset=".25" stop-color="#E8E0CE"/><stop offset=".5" stop-color="#F6F1E6"/><stop offset=".8" stop-color="#D8CDB8"/><stop offset="1" stop-color="#9E9179"/></linearGradient>
+ <linearGradient id="gColH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3EDE0"/><stop offset="1" stop-color="#CFC4AE"/></linearGradient>
+ <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3D98E"/><stop offset=".55" stop-color="#B8892A"/><stop offset="1" stop-color="#7A5A14"/></linearGradient>
+ <linearGradient id="gCmap" x1="0" y1="1" x2="0" y2="0">${CMAP.map(s => `<stop offset="${s[0]}" stop-color="${s[1]}"/>`).join('')}</linearGradient>
+ <pattern id="hatchCer" patternUnits="userSpaceOnUse" width=".32" height=".32" patternTransform="rotate(45)"><rect width=".32" height=".32" fill="#E4E0D7"/><line x1="0" y1="0" x2="0" y2=".32" stroke="#A39C8F" stroke-width=".035"/></pattern>
+</defs>`;
+
+/* =====================================================================
+   3. Geometría de la boquilla (pulgadas; r radial, y axial; y = 0 en la tapa)
+      Datos del artículo: longitud 41,38 in, campanas Ø 9,06 in, barra Ø 1,625 in.
+      Radios interiores tomados de la lectura de la Fig. 10 (esquema).
+   ===================================================================== */
+const VC = 19.9185;
+const YCUT = 1.5;               // altura del corte radial (zona de la brida)
+function ceramicOuter(){
+  const p = [[1.9, 19.3], [2.3, 18.85]];
+  [17.6, 15.2, 12.8, 10.4, 8.0, 5.6].forEach(yc => {
+    for (let i = 0; i <= 10; i++){ const t = i / 10; p.push([2.3 + t * 2.1, yc + 0.75 - 0.62 * t - 0.1 * t * t]); }
+    for (let i = 1; i <= 6; i++){ const a = Math.PI / 2 - i * Math.PI / 6; p.push([4.40 + 0.13 * Math.cos(a), yc - 0.10 + 0.13 * Math.sin(a)]); }
+    for (let i = 9; i >= 0; i--){ const t = i / 10; p.push([2.3 + t * 2.1, yc - 0.23 - 0.32 * Math.pow(1 - t, 1.5)]); }
+  });
+  p.push([2.3, 3.4], [2.55, 3.2], [2.55, 2.2], [2.05, 2.0]);
+  for (let y = -9.6; y >= -15.2 - 1e-9; y -= 0.07) p.push([1.9 + 0.15 * Math.cos(2 * Math.PI * (y + 9.6) / 0.7), y]);
+  p.push([1.75, -15.45], [1.6, -15.9]);
+  return p;
+}
+const CER_OUT = ceramicOuter();
+const RR = (r0, r1, y0, y1) => [[r0, y1], [r1, y1], [r1, y0], [r0, y0]];
+const PARTS = {
+  ceramic: [[1.17, 19.3]].concat(CER_OUT, [[1.17, -15.9]]),
+  oilOut: RR(1.06, 1.17, -15.9, 19.3), mylar: RR(1.0, 1.06, -15.75, 19.15), oilIn: RR(0.8125, 1.0, -15.9, 19.3),
+  glue: RR(2.05, 2.12, -0.9, 1.0), paint: RR(2.05, 2.11, -9.6, -0.9),
+  flange: [[2.12, 1.0], [2.45, 1.0], [2.45, 0.55], [3.75, 0.55], [3.75, 0], [2.45, 0], [2.45, -0.9], [2.12, -0.9]],
+  nut: RR(3.05, 3.45, 0.55, 0.95),
+  gasketF: RR(2.05, 2.5, 1.0, 1.18), gasketT: RR(1.17, 1.8, 19.3, 19.45), gasketB: RR(1.17, 1.7, -16.05, -15.9),
+  capT: RR(0.8125, 1.5, 19.45, 20.15), capB: RR(0.8125, 1.45, -16.75, -16.05)
+};
+const FILL = {ceramic:'url(#hatchCer)', oilOut:'#D9BB5E', mylar:'#2F8C78', oilIn:'#D9BB5E', glue:'#B79F72', paint:'#353941',
+  flange:'#A9B4C5', nut:'#7E8AA0', gasketF:'#1D1F24', gasketT:'#1D1F24', gasketB:'#1D1F24', capT:'#8E99AB', capB:'#8E99AB'};
+const ORDER = ['ceramic','oilOut','mylar','oilIn','glue','paint','flange','nut','gasketF','gasketT','gasketB','capT','capB'];
+function polyD(pts, mirror){
+  const s = mirror ? -1 : 1; let d = '';
+  pts.forEach((p, i) => { d += (i ? 'L' : 'M') + (s * p[0]).toFixed(3) + ' ' + (-p[1]).toFixed(3); });
+  return d + 'Z';
+}
+const STK = {stroke:'#262B3C', 'stroke-width':1, 'vector-effect':'non-scaling-stroke'};
+/* Corte longitudinal: media sección derecha (o ambas mitades) */
+function buildSection(parent, o){
+  o = o || {};
+  const g = el('g', o.id ? {id:o.id} : {}, parent), parts = {};
+  ORDER.forEach(n => {
+    const d = polyD(PARTS[n]) + (o.both ? polyD(PARTS[n], true) : '');
+    parts[n] = el('path', o.outline
+      ? {d, fill:'none', stroke:o.stroke || 'rgba(255,255,255,.55)', 'stroke-width':o.sw || 1, 'vector-effect':'non-scaling-stroke'}
+      : Object.assign({d, fill:FILL[n]}, STK), g);
+  });
+  const yb = o.ext ? -36 : -18.8;
+  const bar = o.both ? [[-0.8125, 22.6], [0.8125, 22.6], [0.8125, yb], [-0.8125, yb]] : RR(0, 0.8125, yb, 22.6);
+  parts.bar = el('path', o.outline
+    ? {d:polyD(bar), fill:'none', stroke:o.stroke || 'rgba(255,255,255,.55)', 'stroke-width':o.sw || 1, 'vector-effect':'non-scaling-stroke'}
+    : Object.assign({d:polyD(bar), fill:'url(#gCopper)'}, STK), g);
+  return {g, parts};
+}
+/* Vista exterior completa */
+function buildExterior(parent){
+  const g = el('g', {}, parent);
+  const sil = CER_OUT.concat(CER_OUT.slice().reverse().map(p => [-p[0], p[1]]));
+  const rr = (r0, r1, y0, y1, fill) => el('path', Object.assign({d:polyD(RR(r0, r1, y0, y1)), fill}, STK), g);
+  el('path', Object.assign({d:polyD(sil), fill:'url(#gPorc)'}, STK, {stroke:'#3B4055'}), g);
+  rr(-2.11, 2.11, -9.6, -0.9, 'url(#gPaint)');
+  rr(-2.45, 2.45, -0.9, 1.0, 'url(#gAlu)'); rr(-3.75, 3.75, 0, 0.55, 'url(#gAlu)');
+  rr(3.05, 3.45, 0.55, 0.95, '#7E8AA0'); rr(-3.45, -3.05, 0.55, 0.95, '#7E8AA0');
+  rr(-2.5, 2.5, 1.0, 1.18, '#1D1F24');
+  rr(-1.8, 1.8, 19.3, 19.45, '#1D1F24'); rr(-1.5, 1.5, 19.45, 20.15, 'url(#gAlu)');
+  rr(-1.7, 1.7, -16.05, -15.9, '#1D1F24'); rr(-1.45, 1.45, -16.75, -16.05, 'url(#gAlu)');
+  rr(-0.8125, 0.8125, 20.15, 22.6, 'url(#gCopper)'); rr(-0.8125, 0.8125, -18.8, -16.75, 'url(#gCopper)');
+  return g;
+}
+/* Tanque idealizado (modelo): tapa, pared y fondo */
+const TANK = {lid:RR(2.6, 26, -0.45, 0), wall:RR(26, 26.45, -48, 0), bottom:RR(0, 26.45, -48.45, -48)};
+function buildTank(parent, both, o){
+  o = o || {};
+  const g = el('g', {}, parent), parts = {};
+  if (!o.noOil) el('path', {d:polyD(RR(0, 26, -48, -0.45)) + (both ? polyD(RR(0, 26, -48, -0.45), true) : ''), fill:o.oil || 'rgba(210,176,78,.18)'}, g);
+  for (const k in TANK) parts[k] = el('path', Object.assign({d:polyD(TANK[k]) + (both ? polyD(TANK[k], true) : ''), fill:o.metal || '#5B6B85'}, STK), g);
+  return {g, parts};
+}
+/* Marco de cámara: el punto (cx, cy) en pulgadas queda en (px, py) del lienzo 1920×972 */
+function frameVB(cx, cy, k, px, py){ return [cx - px / k, -cy - py / k, 1920 / k, 972 / k]; }
+function nestSvg(parent, box, vb){
+  const s = el('svg', {x:box.x, y:box.y, width:box.w, height:box.h, viewBox:vb.join(' '), preserveAspectRatio:'xMidYMid meet', overflow:'hidden'}, parent);
+  s._box = box; return s;
+}
+function toPx(ns, vb, r, y){
+  const b = ns._box, s = Math.min(b.w / vb[2], b.h / vb[3]);
+  const ox = b.x + (b.w - vb[2] * s) / 2, oy = b.y + (b.h - vb[3] * s) / 2;
+  return [ox + (r - vb[0]) * s, oy + (-y - vb[1]) * s];
+}
+function fromPx(ns, vb, px, py){
+  const b = ns._box, s = Math.min(b.w / vb[2], b.h / vb[3]);
+  const ox = b.x + (b.w - vb[2] * s) / 2, oy = b.y + (b.h - vb[3] * s) / 2;
+  return [vb[0] + (px - ox) / s, -(vb[1] + (py - oy) / s)];
+}
+/* etiquetas en píxeles */
+function text(parent, x, y, s, o){
+  o = o || {};
+  const t = el('text', {x, y, 'font-size':o.fs || 21, 'text-anchor':o.anchor || 'start', fill:o.fill || 'currentColor', 'font-weight':o.fw || 600}, parent);
+  if (o.halo){ t.setAttribute('paint-order', 'stroke'); t.setAttribute('stroke', o.halo); t.setAttribute('stroke-width', o.hw || 5); t.setAttribute('stroke-linejoin', 'round'); }
+  if (o.rot) t.setAttribute('transform', `rotate(${o.rot} ${x} ${y})`);
+  const lines = String(s).split('\n');
+  if (lines.length === 1) t.textContent = s;
+  else lines.forEach((ln, i) => { const ts = el('tspan', {x, dy:i ? '1.2em' : '0'}, t); ts.textContent = ln; });
+  return t;
+}
+function leader(parent, x1, y1, x2, y2, color, w){
+  const g = el('g', {}, parent);
+  el('path', {d:`M${x1} ${y1} L${x2} ${y2}`, stroke:color, 'stroke-width':w || 1.6, fill:'none'}, g);
+  el('circle', {cx:x2, cy:y2, r:3.4, fill:color}, g);
+  return g;
+}
+
+/* =====================================================================
+   4. Campos didácticos
+      V: interpolación geométrica entre conductor y tierras (NO resuelve Laplace).
+      |E|: mapa construido con los valores publicados (Fig. 9, Fig. 10 y texto);
+           la variación axial es cualitativa.
+   ===================================================================== */
+function dRect(r, y, b){ const dr = r < b[0] ? b[0] - r : r > b[1] ? r - b[1] : 0, dy = y < b[2] ? b[2] - y : y > b[3] ? y - b[3] : 0; return Math.hypot(dr, dy); }
+const COND = [[0, 0.8125, -36, 22.6], [0, 1.5, 19.45, 20.15]];
+const GND  = [[2.12, 2.45, -0.9, 1.0], [2.45, 3.75, 0, 0.55], [2.05, 2.11, -9.6, -0.9], [2.6, 26, -0.45, 0], [26, 26.45, -48, 0], [0, 26.45, -48.45, -48]];
+function Vdid(r, y){
+  r = Math.abs(r);
+  let dc = 1e9; for (const b of COND){ const d = dRect(r, y, b); if (d < dc) dc = d; }
+  if (dc === 0) return VC;
+  let dg = Math.max(0, 80 - Math.hypot(r, y + 10));
+  for (const b of GND){ const d = dRect(r, y, b); if (d < dg) dg = d; }
+  if (dg === 0) return 0;
+  /* forma coaxial local: V = Vc·ln(R/r)/ln(R/a), con r = a + dc y R = a + dc + dg */
+  const a = 0.8125, R = a + dc + dg;
+  return VC * Math.log(R / (a + dc)) / Math.log(R / a);
+}
+/* radio exterior de la cerámica a la altura y */
+const RMAX = (() => {
+  const n = Math.round((19.3 + 15.9) / 0.01) + 1, t = new Float32Array(n), P = PARTS.ceramic;
+  for (let i = 0; i < n; i++){
+    const y = -15.9 + i * 0.01; let m = 0;
+    for (let j = 0; j < P.length; j++){
+      const a = P[j], b = P[(j + 1) % P.length];
+      if ((a[1] - y) * (b[1] - y) <= 0 && a[1] !== b[1]){ const r = a[0] + (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]); if (r > m) m = r; }
+    }
+    t[i] = m;
+  }
+  return y => (y < -15.9 || y > 19.3) ? 0 : t[Math.round((y + 15.9) / 0.01)];
+})();
+function axial(y){
+  if (y >= -0.6 && y <= 1.4) return 1;
+  if (y > 1.4){ if (y <= 2.8) return lerp(1, 0.55, (y - 1.4) / 1.4); if (y <= 3.4) return lerp(0.55, 0.12, (y - 2.8) / 0.6); return 0.12; }
+  if (y >= -2.2) return lerp(1, 0.85, (-0.6 - y) / 1.6);
+  if (y >= -8.8) return 0.85;
+  if (y >= -9.6) return lerp(0.85, 0.55, (-8.8 - y) / 0.8);
+  if (y >= -10.4) return lerp(0.55, 0.12, (-9.6 - y) / 0.8);
+  return 0.12;
+}
+function Edid(r, y){
+  r = Math.abs(r);
+  for (const b of COND) if (dRect(r, y, b) === 0) return 0;
+  for (const b of GND) if (dRect(r, y, b) === 0) return 0;
+  if (y > -15.9 && y < 19.3){
+    const a = axial(y), ro = RMAX(y);
+    if (r < 1.0)  return (1.55 + (1.0 - r) / 0.1875 * 0.25) * a;   // aceite pegado a la barra: 1,56 a 1,80
+    if (r < 1.06) return 0.65 * a;                                 // tubo de Mylar: 0,65
+    if (r < 1.17) return (1.27 + (1.17 - r) / 0.11 * 0.10) * a;    // aceite pegado a la cerámica: 1,27 a 1,37
+    if (r < ro)   return (0.24 + clamp((2.05 - r) / 0.88, 0, 1) * 0.18) * a; // cerámica: 0,24 a 0,42
+  }
+  return 0.03;
+}
+function renderField(fn, r0, r1, y0, y1, res, vmax){
+  const W = Math.round((r1 - r0) / res), H = Math.round((y1 - y0) / res);
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const ctx = c.getContext('2d'), im = ctx.createImageData(W, H), d = im.data;
+  for (let j = 0; j < H; j++){
+    const y = y1 - (j + 0.5) * res;
+    for (let i = 0; i < W; i++){
+      const v = fn(r0 + (i + 0.5) * res, y), k = Math.round(clamp(v / vmax, 0, 1) * 255) * 3, o = (j * W + i) * 4;
+      d[o] = LUT[k]; d[o + 1] = LUT[k + 1]; d[o + 2] = LUT[k + 2]; d[o + 3] = 255;
+    }
+  }
+  ctx.putImageData(im, 0, 0);
+  return {url:c.toDataURL('image/png'), r0, r1, y0, y1};
+}
+function placeImg(g, im, mirror){
+  const a = {href:im.url, x:im.r0, y:-im.y1, width:im.r1 - im.r0, height:im.y1 - im.y0, preserveAspectRatio:'none'};
+  el('image', a, g);
+  if (mirror) el('image', a, el('g', {transform:'scale(-1 1)'}, g));
+}
+function contourPaths(fn, r0, r1, y0, y1, h, levels, skip){
+  const W = Math.round((r1 - r0) / h) + 1, H = Math.round((y1 - y0) / h) + 1, F = new Float32Array(W * H);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) F[j * W + i] = fn(r0 + i * h, y1 - j * h);
+  const out = levels.map(() => []);
+  for (let j = 0; j < H - 1; j++) for (let i = 0; i < W - 1; i++){
+    const x0 = r0 + i * h, yT = -(y1 - j * h);
+    if (skip && x0 + h > skip[0] && x0 < skip[1] && -yT - h < skip[3] && -yT > skip[2]) continue;
+    const a = F[j * W + i], b = F[j * W + i + 1], c = F[(j + 1) * W + i + 1], e = F[(j + 1) * W + i];
+    levels.forEach((Lv, li) => {
+      const idx = (a > Lv ? 8 : 0) | (b > Lv ? 4 : 0) | (c > Lv ? 2 : 0) | (e > Lv ? 1 : 0);
+      if (idx === 0 || idx === 15) return;
+      const T = () => [x0 + h * (Lv - a) / (b - a), yT], Rt = () => [x0 + h, yT + h * (Lv - b) / (c - b)],
+            B = () => [x0 + h * (Lv - e) / (c - e), yT + h], Lf = () => [x0, yT + h * (Lv - a) / (e - a)];
+      const S = {1:[Lf,B],2:[B,Rt],3:[Lf,Rt],4:[T,Rt],5:[Lf,T,B,Rt],6:[T,B],7:[Lf,T],8:[Lf,T],9:[T,B],10:[Lf,B,T,Rt],11:[T,Rt],12:[Lf,Rt],13:[B,Rt],14:[Lf,B]}[idx];
+      for (let s = 0; s < S.length; s += 2){ const p = S[s](), q = S[s + 1](); out[li].push('M' + p[0].toFixed(3) + ' ' + p[1].toFixed(3) + 'L' + q[0].toFixed(3) + ' ' + q[1].toFixed(3)); }
+    });
+  }
+  return out.map(a => a.join(''));
+}
+function arrowPath(seeds, Lr){
+  let d = '';
+  seeds.forEach(([r, y]) => {
+    const e = 0.04, gr = (Vdid(r + e, y) - Vdid(r - e, y)) / (2 * e), gy = (Vdid(r, y + e) - Vdid(r, y - e)) / (2 * e);
+    const n = Math.hypot(gr, gy) || 1, ux = -gr / n, uy = gy / n;   // E = −∇V (en coordenadas SVG, y hacia abajo)
+    const x1 = r - ux * Lr / 2, y1 = -y - uy * Lr / 2, x2 = r + ux * Lr / 2, y2 = -y + uy * Lr / 2, hl = Lr * 0.32;
+    const ax = x2 - ux * hl, ay = y2 - uy * hl, px = -uy * hl * 0.55, py = ux * hl * 0.55;
+    d += `M${x1.toFixed(2)} ${y1.toFixed(2)}L${x2.toFixed(2)} ${y2.toFixed(2)}M${(ax + px).toFixed(2)} ${(ay + py).toFixed(2)}L${x2.toFixed(2)} ${y2.toFixed(2)}L${(ax - px).toFixed(2)} ${(ay - py).toFixed(2)}`;
+  });
+  return d;
+}
+/* Lectura visual de la Fig. 10 (s en pulgadas, |E| en kV/mm). Aproximación, no datos tabulados. */
+const FIG10 = [[0,0.005],[2.44,0.005],[2.46,0.24],[2.6,0.255],[2.8,0.275],[2.95,0.30],[3.05,0.315],[3.15,0.34],[3.25,0.38],[3.32,0.42],
+  [3.335,1.27],[3.36,1.32],[3.40,1.35],[3.43,1.37],[3.445,0.67],[3.49,0.65],[3.505,1.56],[3.58,1.66],[3.69,1.80],[3.87,0.0],[4.5,0.0]];
+function fig10(s){
+  for (let i = 0; i < FIG10.length - 1; i++){ const a = FIG10[i], b = FIG10[i + 1]; if (s <= b[0]) return lerp(a[1], b[1], (s - a[0]) / (b[0] - a[0])); }
+  return 0;
+}
+function materialAt(s){
+  if (s < 2.45) return 'Aire exterior';
+  if (s < 3.33) return 'Cerámica';
+  if (s < 3.44) return 'Aceite pegado a la cerámica';
+  if (s < 3.50) return 'Tubo de Mylar';
+  if (s < 3.69) return 'Aceite pegado a la barra';
+  if (s < 3.87) return 'Frontera con la barra';
+  return 'Barra central';
+}
+
+/* =====================================================================
+   5. Fondos: estrellas, constelaciones, mármol y pórtico
+   ===================================================================== */
+(function stars(){
+  const c = $('#stars'), x = c.getContext('2d'), R = rng(7);
+  for (let i = 0; i < 430; i++){
+    const px = R() * 1920, py = R() * 1080, big = R() > 0.93, r = big ? 1.1 + R() * 1.3 : 0.3 + R() * 0.9, a = 0.25 + R() * 0.6;
+    if (big){ const g = x.createRadialGradient(px, py, 0, px, py, r * 5); g.addColorStop(0, `rgba(246,236,206,${a * 0.5})`); g.addColorStop(1, 'rgba(246,236,206,0)'); x.fillStyle = g; x.fillRect(px - r * 5, py - r * 5, r * 10, r * 10); }
+    x.fillStyle = `rgba(242,235,220,${a})`; x.beginPath(); x.arc(px, py, r, 0, 7); x.fill();
+  }
+})();
+const constel = $('#constel');
+const CONST_LINES = [];
+(function(){
+  /* trazos celestes discretos (Pegaso, gran cuadrado y cuello) */
+  const sets = [
+    [[210,250],[330,232],[352,350],[232,368],[210,250]], [[330,232],[420,180],[505,196],[560,150]],
+    [[1600,820],[1690,770],[1790,800],[1840,720]], [[1690,770],[1660,690]]
+  ];
+  sets.forEach(pts => {
+    const p = el('path', {d:'M' + pts.map(q => q.join(' ')).join('L'), fill:'none', stroke:'rgba(233,203,124,.26)', 'stroke-width':1.2}, constel);
+    CONST_LINES.push(p);
+    pts.forEach(q => el('circle', {cx:q[0], cy:q[1], r:2.4, fill:'rgba(246,236,206,.75)'}, constel));
+  });
+})();
+(function marble(){
+  const c = document.createElement('canvas'); c.width = 1920; c.height = 1080;
+  const x = c.getContext('2d'), R = rng(11);
+  const g = x.createLinearGradient(0, 0, 1920, 1080); g.addColorStop(0, '#F5EFE3'); g.addColorStop(0.5, '#F0E8D8'); g.addColorStop(1, '#E9E0CE');
+  x.fillStyle = g; x.fillRect(0, 0, 1920, 1080);
+  for (let i = 0; i < 46; i++){
+    const px = R() * 1920, py = R() * 1080, rr = 80 + R() * 260, rg = x.createRadialGradient(px, py, 0, px, py, rr);
+    rg.addColorStop(0, 'rgba(206,193,168,0.10)'); rg.addColorStop(1, 'rgba(206,193,168,0)'); x.fillStyle = rg; x.fillRect(px - rr, py - rr, 2 * rr, 2 * rr);
+  }
+  for (let v = 0; v < 18; v++){
+    let px = R() * 1920, py = R() * 1080, ang = R() * Math.PI * 2; const len = 300 + R() * 900;
+    x.beginPath(); x.moveTo(px, py);
+    for (let t = 0; t < len; t += 8){ ang += (R() - 0.5) * 0.35; px += Math.cos(ang) * 8; py += Math.sin(ang) * 8; x.lineTo(px, py); }
+    x.strokeStyle = `rgba(150,135,108,${0.08 + R() * 0.13})`; x.lineWidth = 0.6 + R() * 1.8; x.stroke();
+  }
+  $('#bg-marble').style.backgroundImage = `url(${c.toDataURL('image/jpeg', 0.86)})`;
+})();
+function drawPortico(svg){
+  const g = el('g', {}, svg);
+  el('rect', {x:0, y:58, width:1920, height:14, fill:'url(#gColH)'}, g);
+  el('rect', {x:0, y:72, width:1920, height:2.5, fill:'#B8892A'}, g);
+  el('path', {d:'M780 58 L960 2 L1140 58 Z', fill:'url(#gColH)', stroke:'#B8892A', 'stroke-width':2}, g);
+  el('path', {d:'M812 52 L960 12 L1108 52 Z', fill:'none', stroke:'rgba(160,118,32,.6)', 'stroke-width':1.3}, g);
+  [22, 1828].forEach(x0 => {
+    el('rect', {x:x0 - 6, y:74, width:82, height:12, fill:'url(#gColH)', stroke:'#9C8A66', 'stroke-width':1}, g);
+    el('path', {d:`M${x0} 86 Q${x0 + 35} 106 ${x0 + 70} 86 Z`, fill:'url(#gCol)'}, g);
+    el('rect', {x:x0 + 2, y:98, width:66, height:6, fill:'url(#gGold)'}, g);
+    el('rect', {x:x0 + 4, y:104, width:62, height:828, fill:'url(#gCol)'}, g);
+    for (let i = 1; i < 7; i++) el('line', {x1:x0 + 4 + i * 62 / 7, y1:110, x2:x0 + 4 + i * 62 / 7, y2:926, stroke:'rgba(110,98,76,.33)', 'stroke-width':1.4}, g);
+    /* anillo de armadura en el fuste */
+    el('path', {d:`M${x0 + 2} 512 L${x0 + 35} 500 L${x0 + 68} 512 L${x0 + 68} 524 L${x0 + 35} 512 L${x0 + 2} 524 Z`, fill:'url(#gGold)'}, g);
+    el('rect', {x:x0 + 2, y:932, width:66, height:6, fill:'url(#gGold)'}, g);
+    el('rect', {x:x0 - 6, y:938, width:82, height:24, fill:'url(#gColH)', stroke:'#9C8A66', 'stroke-width':1}, g);
+  });
+}
+drawPortico($('#portico')); drawPortico($('#portico-ghost'));
+
+/* Puertas del templo: mármol con la rueda de las doce casas grabada en oro, partida por la junta */
+const FX = {L:$('#fx .door.l'), R:$('#fx .door.r'), seam:$('#fx .seam'), cols:$('#fx-cols'), cons:$('#fx-const'), relay:$('#relay')};
+(function(){
+  const img = $('#bg-marble').style.backgroundImage;
+  [FX.L, FX.R].forEach(d => {
+    d.style.backgroundImage = img;
+    const w = el('svg', {viewBox:'0 0 1920 972', 'aria-hidden':'true'}, d), cx = 960, cy = 486, g = el('g', {fill:'none', stroke:'#A87A1E', 'stroke-width':2.2}, w);
+    el('circle', {cx, cy, r:262}, g); el('circle', {cx, cy, r:248, 'stroke-width':1, opacity:0.6}, g); el('circle', {cx, cy, r:176}, g);
+    el('circle', {cx, cy, r:70, 'stroke-width':1.6}, g);
+    for (let i = 0; i < 12; i++){
+      const a = i * Math.PI / 6, a2 = a + Math.PI / 12;
+      el('line', {x1:cx + 176 * Math.cos(a), y1:cy + 176 * Math.sin(a), x2:cx + 262 * Math.cos(a), y2:cy + 262 * Math.sin(a)}, g);
+      const sx = cx + 219 * Math.cos(a2), sy = cy + 219 * Math.sin(a2), r = 9;
+      el('path', {d:`M${sx} ${sy - r}L${sx + 0.28 * r} ${sy - 0.28 * r}L${sx + r} ${sy}L${sx + 0.28 * r} ${sy + 0.28 * r}L${sx} ${sy + r}L${sx - 0.28 * r} ${sy + 0.28 * r}L${sx - r} ${sy}L${sx - 0.28 * r} ${sy - 0.28 * r}Z`, fill:'#B8892A', stroke:'none'}, g);
+      el('line', {x1:cx + 70 * Math.cos(a2), y1:cy + 70 * Math.sin(a2), x2:cx + 150 * Math.cos(a2), y2:cy + 150 * Math.sin(a2), 'stroke-width':1, opacity:0.55}, g);
+    }
+    el('path', {d:`M${cx} ${cy - 46}L${cx + 13} ${cy - 13}L${cx + 46} ${cy}L${cx + 13} ${cy + 13}L${cx} ${cy + 46}L${cx - 13} ${cy + 13}L${cx - 46} ${cy}L${cx - 13} ${cy - 13}Z`, fill:'url(#gGold)', stroke:'none'}, g);
+  });
+  /* columnata en primer plano para los pasos entre salas de mármol */
+  [120, 880, 1640].forEach(x0 => {
+    const g = el('g', {}, FX.cols);
+    el('rect', {x:x0, y:0, width:150, height:972, fill:'url(#gCol)'}, g);
+    for (let i = 1; i < 8; i++) el('line', {x1:x0 + i * 150 / 8, x2:x0 + i * 150 / 8, y1:0, y2:972, stroke:'rgba(110,98,76,.32)', 'stroke-width':2}, g);
+    el('path', {d:`M${x0} 470L${x0 + 75} 448L${x0 + 150} 470L${x0 + 150} 492L${x0 + 75} 470L${x0} 492Z`, fill:'url(#gGold)'}, g);
+    el('rect', {x:x0 - 6, y:0, width:5, height:972, fill:'rgba(40,30,15,.18)'}, g);
+  });
+  /* constelación del relevo: cinco estrellas, una por escena del expositor 2 */
+  const rs = $('svg', FX.relay), pts = [[40, 50], [150, 22], [270, 44], [390, 18], [520, 40]];
+  FX.relayLine = el('path', {d:'M' + pts.map(q => q.join(' ')).join('L'), fill:'none', stroke:'#B8892A', 'stroke-width':2}, rs);
+  FX.relayStars = pts.map(([x, y], i) => {
+    const g = el('g', {transform:`translate(${x} ${y})`}, rs);
+    el('path', {d:`M0 -14L4 -4L14 0L4 4L0 14L-4 4L-14 0L-4 -4Z`, fill:'#B8892A'}, g);
+    el('text', {x:0, y:34, 'text-anchor':'middle', 'font-size':15, 'font-weight':700, fill:'#3A4363', text:['VI','VII','VIII','IX','X'][i]}, g);
+    return g;
+  });
+})();
+
+/* =====================================================================
+   6. Escenas
+   ===================================================================== */
+const S = [];
+const META = [
+  ['La boquilla en el transformador', 1, 35], ['El caso de estudio', 1, 55], ['Anatomía y materiales', 1, 70],
+  ['Fundamento físico', 1, 80], ['Condiciones del modelo', 1, 60], ['Método de elementos finitos', 2, 50],
+  ['Distribución del potencial', 2, 75], ['Región de mayor campo', 2, 85], ['Modelo 3D y 2D axisimétrico', 2, 50],
+  ['Interpretación de ingeniería', 2, 40]
+];
+const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+
+/* ---------- I · transformador → boquilla ---------- */
+(function(){
+  const sv = $('#sv1'), k0 = 3.4, VA = [-378, -150, 1920 / k0, 972 / k0], VB = frameVB(0, -1.9, 17, 520, 560);
+  sv.setAttribute('viewBox', VA.join(' '));
+  const root = el('g', {}, sv);
+  const hv = el('g', {}, root);
+  [-92, -66, -40].forEach(x => {
+    const h = el('g', {}, hv);
+    el('rect', {x:x - 1.2, y:-88, width:2.4, height:8, fill:'url(#gCopper)'}, h);
+    el('rect', {x:x - 3, y:-81, width:6, height:112, fill:'url(#gPorc)', stroke:'#3B4055', 'stroke-width':0.25}, h);
+    let d = '';
+    for (let i = 0; i < 22; i++){ const y = -78 + i * 3.4;
+      d += `M${x - 3} ${y}L${x - 7.2} ${y + 1.1}L${x - 7.2} ${y + 1.6}L${x - 3} ${y + 1.2}ZM${x + 3} ${y}L${x + 7.2} ${y + 1.1}L${x + 7.2} ${y + 1.6}L${x + 3} ${y + 1.2}Z`; }
+    el('path', {d, fill:'#D9D5CD', stroke:'#3B4055', 'stroke-width':0.2}, h);
+    el('rect', {x:x - 6, y:-2.2, width:12, height:2.2, fill:'url(#gAlu)'}, h);
+  });
+  const lvs = [-25, 0, 25].map(x => { const g = el('g', {transform:`translate(${x} 0)`}, root); buildExterior(g); return g; });
+  const tank = el('g', {}, root), gold = 'rgba(233,203,124,.55)';
+  el('rect', {x:-162, y:110, width:244, height:7, fill:'#0E1A38', stroke:gold, 'stroke-width':0.5}, tank);
+  [[-180, -152], [72, 100]].forEach(([a, b]) => {
+    el('rect', {x:a, y:14, width:b - a, height:4, fill:'#20335E', stroke:gold, 'stroke-width':0.3}, tank);
+    el('rect', {x:a, y:90, width:b - a, height:4, fill:'#20335E', stroke:gold, 'stroke-width':0.3}, tank);
+    for (let xx = a + 1; xx < b - 1.5; xx += 3.2) el('rect', {x:xx, y:18, width:2.2, height:72, fill:'#1B2C55', stroke:'rgba(233,203,124,.32)', 'stroke-width':0.25}, tank);
+  });
+  const body = el('rect', {x:-150, y:0, width:220, height:110, fill:'url(#gTank)', stroke:gold, 'stroke-width':0.6}, tank);
+  for (let xx = -122.5; xx < 70; xx += 27.5) el('line', {x1:xx, y1:4, x2:xx, y2:106, stroke:'rgba(233,203,124,.2)', 'stroke-width':0.6}, tank);
+  el('rect', {x:-153, y:-1.2, width:226, height:2.4, fill:'#2B4176', stroke:gold, 'stroke-width':0.5}, tank);
+  el('rect', {x:-148, y:-74, width:42, height:15, rx:7.5, fill:'url(#gTank)', stroke:gold, 'stroke-width':0.5}, tank);
+  el('path', {d:'M-140 -59V-1.2M-114 -59V-1.2M-106 -66H-100V-1.2', stroke:'#2B4176', 'stroke-width':1.8, fill:'none'}, tank);
+  /* trazo dorado del contorno: se dibuja antes de que aparezca el relleno */
+  const trace = el('g', {fill:'none', stroke:'#F3D98E', 'stroke-width':0.75, 'stroke-linejoin':'round'}, root);
+  const tr = [
+    el('rect', {x:-150, y:0, width:220, height:110}, trace), el('rect', {x:-153, y:-1.2, width:226, height:2.4}, trace),
+    el('rect', {x:-148, y:-74, width:42, height:15, rx:7.5}, trace), el('rect', {x:-180, y:14, width:28, height:80}, trace),
+    el('rect', {x:72, y:14, width:28, height:80}, trace), el('rect', {x:-162, y:110, width:244, height:7}, trace)
+  ];
+  const risers = Array.from(hv.children).concat(lvs);
+  /* accesorios que estorban en el acercamiento (radiadores, conservador, refuerzos, base) */
+  const aux = Array.from(tank.children).filter(e => e !== body && e.getAttribute('x') !== '-153');
+  /* rótulos del acercamiento: el problema es la diferencia de potencial entre barra y brida */
+  const zc = el('g', {}, sv), zf = 22 / 17;
+  el('path', {d:'M0.9 -21.2H7.4', stroke:'#E9CB7C', 'stroke-width':0.09}, zc); el('circle', {cx:0.9, cy:-21.2, r:0.22, fill:'#E9CB7C'}, zc);
+  text(zc, 7.8, -20.8, 'Barra central: ≈ 19,9 kV', {fs:zf, fill:'#E9CB7C', fw:700});
+  el('path', {d:'M3.9 -0.3L6.2 3.2H7.4', fill:'none', stroke:'#9CC0F0', 'stroke-width':0.09}, zc); el('circle', {cx:3.9, cy:-0.3, r:0.22, fill:'#9CC0F0'}, zc);
+  text(zc, 7.8, 3.6, 'Brida y tanque: 0 V', {fs:zf, fill:'#9CC0F0', fw:700});
+  text(zc, 7.8, 5.1, 'el aislamiento entre ambos soporta el campo', {fs:18 / 17, fill:'#CFC7B6', fw:400});
+  const lab = el('g', {fill:'#F2EBDC'}, sv), fs = 23 / k0;
+  el('path', {d:'M-100 -91V-93H-32V-91', stroke:'#E9CB7C', 'stroke-width':0.5, fill:'none'}, lab);
+  text(lab, -66, -95.5, L.hv, {fs, anchor:'middle'});
+  el('path', {d:'M-30 -25V-27H30V-25', stroke:'#E9CB7C', 'stroke-width':0.5, fill:'none'}, lab);
+  text(lab, 0, -29.5, L.lv, {fs, anchor:'middle'});
+  const ring = el('rect', {x:-7, y:-24.5, width:14, height:27, rx:2, fill:'none', stroke:'#E9CB7C', 'stroke-width':0.5, 'stroke-dasharray':'1.6 1.2'}, sv);
+  S[0] = {
+    el:$('#s1'), revealAt:{0:1.5, 2:1.5},
+    base(){
+      sv.setAttribute('viewBox', VA.join(' ')); gsap.set(body, {attr:{'fill-opacity':1}}); gsap.set([lab, ring], {opacity:0}); gsap.set([hv, lvs[0], lvs[2]], {opacity:1});
+      gsap.set(tank, {opacity:0}); gsap.set(trace, {opacity:1}); hideStroke(tr); gsap.set(risers, {y:34, opacity:0});
+      gsap.set(aux, {opacity:1}); gsap.set(zc.children, {opacity:0});
+    },
+    steps:[
+      tl => {
+        drawStroke(tl, tr, {duration:1.0, stagger:0.09, ease:EIO}, 0);
+        tl.to(tank, {opacity:1, duration:0.6, ease:EO}, 0.75)
+          .to(trace, {opacity:0.25, duration:0.5, ease:EO}, 1.15)
+          .to(risers, {y:0, opacity:1, duration:0.8, stagger:0.07, ease:EO}, 1.0);
+      },
+      tl => { tl.to(lab, {opacity:1, duration:0.45, ease:EO}, 0).to(ring, {opacity:1, duration:0.45, ease:EO}, 0.15); },
+      tl => {
+        tl.to([lab, ring], {opacity:0, duration:0.3, ease:EO}, 0)
+          .to('#s1-a', {autoAlpha:0, duration:0.3, ease:EO}, 0)
+          .to(sv, {attr:{viewBox:VB.join(' ')}, duration:1.8, ease:EIO}, 0)
+          .to(body, {attr:{'fill-opacity':0.16}, duration:0.8, ease:EO}, 0.7)
+          .to([hv, lvs[0], lvs[2]], {opacity:0.18, duration:0.8, ease:EO}, 0.6)
+          .to(aux.concat(trace), {opacity:0, duration:0.6, ease:EO}, 0.6)
+          .to(zc.children, {opacity:1, duration:0.35, stagger:0.06, ease:EO}, 1.75);
+      }
+    ]
+  };
+})();
+
+/* ---------- II · caso de estudio ---------- */
+(function(){
+  const sv = $('#sv2'), k = 17, VB = frameVB(0, -1.9, k, 520, 560); sv.setAttribute('viewBox', VB.join(' '));
+  const xL = VB[0], xR = VB[0] + 985 / k, fs = px => px / k;
+  const tints = el('g', {}, sv);
+  el('rect', {x:xL, y:-40, width:xR - xL, height:40, fill:'rgba(120,160,230,.08)'}, tints);
+  el('rect', {x:xL, y:0.45, width:xR - xL, height:40, fill:'rgba(210,176,78,.15)'}, tints);
+  el('path', {d:polyD(RR(xL, -2.6, -0.45, 0)) + polyD(RR(2.6, xR, -0.45, 0)), fill:'#2B4176', stroke:'rgba(233,203,124,.6)', 'stroke-width':1, 'vector-effect':'non-scaling-stroke'}, sv);
+  buildExterior(sv);
+  const zones = el('g', {fill:'#F2EBDC'}, sv), gc = '#E9CB7C';
+  el('path', {d:'M-5.6 -19.3H-6.4V-0.3H-5.6', stroke:gc, 'stroke-width':0.12, fill:'none'}, zones);
+  el('path', {d:'M-5.6 0.3H-6.4V18.8H-5.6', stroke:gc, 'stroke-width':0.12, fill:'none'}, zones);
+  text(zones, -7.1, -9.4, L.air, {fs:fs(24), anchor:'end'});
+  text(zones, -7.1, 10.0, L.oil, {fs:fs(24), anchor:'end'});
+  text(zones, xR - 0.8, -1.2, 'aire', {fs:fs(20), anchor:'end', fw:400});
+  text(zones, xR - 0.8, 2.0, 'aceite del transformador', {fs:fs(20), anchor:'end', fw:400});
+  const dims = el('g', {fill:'#F2EBDC'}, sv), sw = 0.08;
+  el('path', {d:'M11.5 -22.6V18.8M10.9 -22.6H12.1M10.9 18.8H12.1M1.1 -22.6H10.9M1.1 18.8H10.9', stroke:gc, 'stroke-width':sw, fill:'none', 'stroke-dasharray':'0'}, dims);
+  text(dims, 12.5, -1.9, L.len, {fs:fs(22), anchor:'middle', rot:90});
+  el('path', {d:'M-4.53 -4.4H4.53M-4.53 -5.0V-3.8M4.53 -5.0V-3.8', stroke:gc, 'stroke-width':sw, fill:'none'}, dims);
+  text(dims, 4.9, -3.0, L.bells, {fs:fs(22)});
+  el('path', {d:'M-0.6 -21.4H-5.6', stroke:gc, 'stroke-width':sw}, dims);
+  el('circle', {cx:-0.6, cy:-21.4, r:0.2, fill:gc}, dims);
+  text(dims, -5.9, -21.0, L.bar, {fs:fs(22), anchor:'end'});
+  S[1] = {
+    el:$('#s2'),
+    base(){ gsap.set([tints, zones, dims], {opacity:0}); },
+    steps:[ () => {},
+      tl => { tl.to(tints, {opacity:1, duration:0.6, ease:EO}, 0).to(zones, {opacity:1, duration:0.45, ease:EO}, 0.2); },
+      tl => { tl.to(dims, {opacity:1, duration:0.45, ease:EO}, 0); },
+      () => {} ]
+  };
+})();
+
+/* ---------- III · anatomía: corte y despiece ---------- */
+(function(){
+  const sv = $('#sv3'), k = 17, VB = frameVB(0, -1.9, k, 470, 560); sv.setAttribute('viewBox', VB.join(' '));
+  const fs = px => px / k;
+  const d = el('defs', {}, sv), cp = el('clipPath', {id:'clip3', clipPathUnits:'userSpaceOnUse'}, d);
+  const clipR = el('rect', {x:0, y:-23.5, width:5, height:0}, cp);
+  const ext = buildExterior(sv);
+  const sec = buildSection(sv, {id:'s3sec'}); sec.g.setAttribute('clip-path', 'url(#clip3)');
+  const cutLine = el('line', {x1:-0.3, x2:5.2, y1:-23.5, y2:-23.5, stroke:'#9C6F12', 'stroke-width':0.16}, sv);
+  /* insignias numeradas como en la Fig. 3 */
+  const TGT = {4:[0.4, 21.0, 21.0], 5:[3.2, 12.8, 13.5], 2:[0.9, 7.0, 8.5], 1:[1.03, 6.0, 6.5], 3:[1.12, 5.0, 4.5], 8:[2.3, 1.09, 2.3], 6:[3.4, 0.3, 0.3], 7:[2.085, -0.3, -1.8], 9:[2.08, -5.0, -5.0]};
+  const badges = {}, bg = el('g', {}, sv);
+  function badge(parent, x, y, n){
+    const g = el('g', {}, parent);
+    el('circle', {cx:x, cy:y, r:0.95, fill:'#18213F'}, g);
+    text(g, x, y + 0.38, String(n), {fs:1.06, anchor:'middle', fill:'#F2EBDC', fw:700});
+    return g;
+  }
+  for (const n in TGT){
+    const [r, y, by] = TGT[n], g = el('g', {}, bg);
+    el('path', {d:`M5.65 ${-by}L${r} ${-y}`, stroke:'#18213F', 'stroke-width':0.07, fill:'none'}, g);
+    el('circle', {cx:r, cy:-y, r:0.16, fill:'#18213F'}, g);
+    badge(g, 6.6, -by, n); badges[n] = g;
+  }
+  /* piezas del despiece (se desplazan lateralmente, sin girar) */
+  const pieces = el('g', {}, sv), P = {};
+  const prect = (g, r0, r1, y0, y1, fill) => el('path', Object.assign({d:polyD(RR(r0, r1, y0, y1)), fill}, STK), g);
+  P[4] = {dx:12.5, g:el('g', {}, pieces)}; prect(P[4].g, -0.8125, 0.8125, -18.8, 22.6, 'url(#gCopper)');
+  P[1] = {dx:17.5, g:el('g', {}, pieces)}; prect(P[1].g, -1.06, 1.06, -15.75, 19.15, 'url(#gMylar)');
+  P[9] = {dx:23.0, g:el('g', {}, pieces)}; prect(P[9].g, -2.11, 2.11, -9.6, -0.9, 'url(#gPaint)');
+  P[6] = {dx:30.5, g:el('g', {}, pieces)};
+  [[-2.45, 2.45, -0.9, 1.0], [-3.75, 3.75, 0, 0.55], [3.05, 3.45, 0.55, 0.95], [-3.45, -3.05, 0.55, 0.95], [-1.5, 1.5, 19.45, 20.15], [-1.45, 1.45, -16.75, -16.05]]
+    .forEach(b => prect(P[6].g, b[0], b[1], b[2], b[3], 'url(#gAlu)'));
+  P[8] = {dx:37.0, g:el('g', {}, pieces)};
+  [[-1.8, 1.8, 19.3, 19.45], [-2.5, 2.5, 1.0, 1.18], [-1.7, 1.7, -16.05, -15.9]].forEach(b => prect(P[8].g, b[0], b[1], b[2], b[3], '#1D1F24'));
+  const pb = el('g', {}, sv);
+  for (const n in P) badge(pb, P[n].dx, 20.6, n);
+  const GHOST = {4:['bar'], 1:['mylar'], 9:['paint'], 6:['flange', 'nut', 'capT', 'capB'], 8:['gasketF', 'gasketT', 'gasketB']};
+  const ghostEls = n => GHOST[n].map(p => sec.parts[p]);
+  /* detalle radial: la misma sección vista con otro encuadre */
+  const box = {x:650, y:300, w:560, h:380}, ivb = [-0.05, -2.45, 2.8, 1.9];
+  const toIn = (px, py) => [VB[0] + px / k, VB[1] + py / k];
+  const inset = el('g', {}, sv);
+  const [ix, iy] = toIn(box.x, box.y);
+  el('rect', {x:ix, y:iy, width:box.w / k, height:box.h / k, fill:'#F7F3EA', stroke:'#18213F', 'stroke-width':0.09}, inset);
+  const isv = el('svg', {x:ix, y:iy, width:box.w / k, height:box.h / k, viewBox:ivb.join(' '), preserveAspectRatio:'xMidYMid meet', overflow:'hidden'}, inset);
+  el('rect', {x:-1, y:-3, width:5, height:3, fill:'#E9EEF5'}, isv);
+  el('use', {href:'#s3sec'}, isv);
+  el('line', {x1:0, x2:2.8, y1:-YCUT, y2:-YCUT, stroke:'#B3362B', 'stroke-width':0.018, 'stroke-dasharray':'.06 .04'}, isv);
+  el('line', {x1:0, x2:0, y1:-3, y2:0, stroke:'#18213F', 'stroke-width':0.01, 'stroke-dasharray':'.05 .03'}, isv);
+  const lens = el('circle', {cx:1.3, cy:-YCUT, r:1.55, fill:'none', stroke:'#18213F', 'stroke-width':0.09}, inset);
+  const lensLink = el('path', {d:`M${1.3 + 1.1} ${-YCUT - 1.1}L${ix} ${iy}M${1.3 + 1.1} ${-YCUT + 1.1}L${ix} ${iy + box.h / k}`, stroke:'#18213F', 'stroke-width':0.06, fill:'none'}, inset);
+  const bandBadges = [[4, 0.4, 'up'], [2, 0.906, 'dn'], [1, 1.03, 'up'], [3, 1.115, 'dn'], [5, 1.6, 'up']];
+  const sc = box.w / ivb[2];
+  bandBadges.forEach(([n, r, pos]) => {
+    const px = box.x + (r - ivb[0]) * sc, [bx] = toIn(px, 0);
+    const by = pos === 'up' ? toIn(0, box.y - 26)[1] : toIn(0, box.y + box.h + 26)[1];
+    el('line', {x1:bx, x2:bx, y1:pos === 'up' ? by + 0.95 : by - 0.95, y2:pos === 'up' ? iy : iy + box.h / k, stroke:'#18213F', 'stroke-width':0.05}, inset);
+    badge(inset, bx, by, n);
+  });
+  { const [ax] = toIn(box.x + (2.4 - ivb[0]) * sc, 0); text(inset, ax, toIn(0, box.y + box.h + 34)[1], 'aire', {fs:fs(21), anchor:'middle', fill:'#18213F'}); }
+  text(inset, ix, toIn(0, box.y + box.h + 34)[1], 'eje, r = 0', {fs:fs(18), fill:'#3A4363', fw:600});
+  text(inset, ix, toIn(0, box.y + box.h + 78)[1], L.insetCap, {fs:fs(20), fill:'#3A4363', fw:600});
+  S[2] = {
+    el:$('#s3'), revealAt:{1:0.6},
+    base(){
+      gsap.set(clipR, {attr:{height:0}}); gsap.set(cutLine, {attr:{y1:-23.5, y2:-23.5}, opacity:0});
+      gsap.set(bg, {opacity:1}); for (const n in badges) gsap.set(badges[n], {opacity:0, x:1.4});
+      hideStroke([lens, lensLink]);
+      for (const n in P) gsap.set(P[n].g, {x:0, opacity:0});
+      gsap.set(pb, {opacity:0}); gsap.set(ext, {opacity:1});
+      ORDER.concat('bar').forEach(p => gsap.set(sec.parts[p], {opacity:1}));
+      gsap.set(inset, {opacity:0});
+    },
+    steps:[ () => {},
+      tl => {
+        tl.to(clipR, {attr:{height:43.5}, duration:1.1, ease:EIO}, 0)
+          .to(cutLine, {opacity:1, duration:0.15, ease:EO}, 0)
+          .to(cutLine, {attr:{y1:20, y2:20}, duration:1.1, ease:EIO}, 0)
+          .to(cutLine, {opacity:0, duration:0.25, ease:EO}, 1.05)
+          .to(['4', '5', '2', '1', '3', '8', '6', '7', '9'].map(n => badges[n]), {opacity:1, x:0, duration:0.45, stagger:0.06, ease:EO}, 0.95);
+      },
+      tl => {
+        const moved = [4, 1, 9, 6, 8];
+        tl.to(moved.map(n => badges[n]), {opacity:0, duration:0.25, ease:EO}, 0)
+          .to(ext, {opacity:0.25, duration:0.5, ease:EO}, 0)
+          .to(moved.flatMap(ghostEls), {opacity:0.12, duration:0.5, ease:EO}, 0.1);
+        moved.forEach((n, i) => {
+          tl.to(P[n].g, {opacity:1, duration:0.15, ease:EO}, 0.1 + i * 0.08)
+            .to(P[n].g, {x:P[n].dx, duration:0.9, ease:EIO}, 0.1 + i * 0.08);
+        });
+        tl.to(pb, {opacity:1, duration:0.35, ease:EO}, 1.2);
+      },
+      tl => {
+        const moved = [4, 1, 9, 6, 8];
+        tl.to(pb, {opacity:0, duration:0.2, ease:EO}, 0);
+        moved.forEach((n, i) => { tl.to(P[n].g, {x:0, duration:0.7, ease:EIO}, i * 0.05).to(P[n].g, {opacity:0, duration:0.2, ease:EO}, 0.55 + i * 0.05); });
+        tl.to(moved.flatMap(ghostEls), {opacity:1, duration:0.3, ease:EO}, 0.7)
+          .to(ext, {opacity:1, duration:0.3, ease:EO}, 0.7)
+          .to(moved.map(n => badges[n]), {opacity:1, duration:0.3, ease:EO}, 0.8)
+          .to(inset, {opacity:1, duration:0.45, ease:EO}, 0.9);
+        drawStroke(tl, lens, {duration:0.5, ease:EIO}, 0.85);
+        drawStroke(tl, lensLink, {duration:0.45, ease:EO}, 1.15);
+      }
+    ]
+  };
+})();
+
+/* ---------- IV · fundamento: V(r) y |E|(r) en un coaxial ideal ---------- */
+(function(){
+  const sv = $('#sv4'), g = el('g', {}, sv), a = 0.8125, b = 2.05, lnba = Math.log(b / a);
+  const X0 = 1210, X1 = 1780, Vt = 215, Vb = 470, Et = 575, Eb = 830;
+  const xr = r => X0 + (r - a) / (b - a) * (X1 - X0), yV = v => Vb - v / 20 * (Vb - Vt), yE = e => Eb - e * (Eb - Et);
+  const Vr = r => VC * Math.log(b / r) / lnba, Er = r => a / r;
+  const ink = '#18213F', ink2 = '#3A4363';
+  [[Vt, Vb], [Et, Eb]].forEach(([t, bt]) => { el('path', {d:`M${X0} ${t - 10}V${bt}H${X1 + 10}`, stroke:ink, 'stroke-width':2, fill:'none'}, g); });
+  [0, 10, 20].forEach(v => { el('line', {x1:X0 - 6, x2:X0, y1:yV(v), y2:yV(v), stroke:ink, 'stroke-width':2}, g); text(g, X0 - 12, yV(v) + 7, String(v), {fs:19, anchor:'end', fill:ink2}); });
+  text(g, X0 - 70, (Vt + Vb) / 2, 'V (kV)', {fs:21, anchor:'middle', fill:ink, rot:-90});
+  text(g, X0 - 40, (Et + Eb) / 2, '|E| relativo', {fs:21, anchor:'middle', fill:ink, rot:-90});
+  text(g, X0, Vb + 30, 'barra (r = a)', {fs:19, fill:ink2}); text(g, X1, Vb + 30, 'tierra (r = b)', {fs:19, anchor:'end', fill:ink2});
+  text(g, X0, Eb + 30, 'barra', {fs:19, fill:ink2}); text(g, X1, Eb + 30, 'tierra', {fs:19, anchor:'end', fill:ink2});
+  let dV = '', dE = '';
+  for (let i = 0; i <= 80; i++){ const r = a + (b - a) * i / 80; dV += (i ? 'L' : 'M') + xr(r).toFixed(1) + ' ' + yV(Vr(r)).toFixed(1); dE += (i ? 'L' : 'M') + xr(r).toFixed(1) + ' ' + yE(Er(r)).toFixed(1); }
+  el('path', {d:dV, stroke:'#16325F', 'stroke-width':3.5, fill:'none'}, g);
+  el('path', {d:dE, stroke:'#9C6F12', 'stroke-width':3.5, fill:'none'}, g);
+  const tan = el('line', {stroke:'#B3362B', 'stroke-width':3}, g);
+  const pV = el('circle', {r:8, fill:'#B3362B', stroke:'#fff', 'stroke-width':2}, g);
+  const pE = el('circle', {r:8, fill:'#B3362B', stroke:'#fff', 'stroke-width':2}, g);
+  const link = el('line', {stroke:'#B3362B', 'stroke-width':1.5, 'stroke-dasharray':'5 5'}, g);
+  const tl1 = text(g, 0, 0, 'pendiente: dV/dr = −E', {fs:20, fill:'#B3362B', halo:'#F1EADC', hw:4});
+  text(g, X0 + 6, Vt - 18, 'V cae más rápido junto a la barra…', {fs:20, fill:ink});
+  text(g, X0 + 6, Et - 18, '…y ahí |E| = |dV/dr| es mayor', {fs:20, fill:ink});
+  text(g, X0 - 70, 892, 'Ilustración: cilindros coaxiales con un solo dieléctrico\n(teoría del curso); no usa datos del artículo.', {fs:18, fill:ink2, fw:400});
+  const P = {r:b - 0.02};
+  function draw(){
+    const r = P.r, x = xr(r), y = yV(Vr(r)), slope = -VC / (r * lnba) * (xr(b) - xr(a)) / (b - a);
+    const dvdx = (yV(Vr(r + 0.001)) - y) / (xr(r + 0.001) - x), ux = 1 / Math.hypot(1, dvdx), uy = dvdx * ux, Lh = 55;
+    tan.setAttribute('x1', x - ux * Lh); tan.setAttribute('y1', y - uy * Lh); tan.setAttribute('x2', x + ux * Lh); tan.setAttribute('y2', y + uy * Lh);
+    pV.setAttribute('cx', x); pV.setAttribute('cy', y); pE.setAttribute('cx', x); pE.setAttribute('cy', yE(Er(r)));
+    link.setAttribute('x1', x); link.setAttribute('x2', x); link.setAttribute('y1', y + 10); link.setAttribute('y2', yE(Er(r)) - 10);
+    const right = x < X1 - 260; tl1.setAttribute('x', right ? x + 22 : x - 22); tl1.setAttribute('y', right ? y + 40 : y - 22); tl1.setAttribute('text-anchor', right ? 'start' : 'end'); void slope;
+  }
+  draw();
+  S[3] = {
+    el:$('#s4'),
+    base(){ P.r = b - 0.02; draw(); gsap.set(g, {opacity:0}); },
+    steps:[
+      tl => { tl.to(g, {opacity:1, duration:0.45, ease:EO}, 0).to(P, {r:a + 0.03, duration:1.2, ease:EIO, onUpdate:draw}, 0.1); },
+      () => {}, () => {}, () => {}
+    ]
+  };
+})();
+
+/* ---------- V · dominio y condiciones de frontera ---------- */
+(function(){
+  const sv = $('#sv5'); sv.setAttribute('viewBox', '0 0 1920 972');
+  const box = {x:250, y:180, w:560, h:770}, VA = [-6, -73, 116, 160], VB = [-3, -26, 55.3, 76];
+  const ns = nestSvg(sv, box, VA);
+  const air = el('path', {d:'M0 -70A80 80 0 0 1 0 90Z', fill:'rgba(47,100,168,.08)'}, ns);
+  const layer = el('path', {d:'M0 -70A80 80 0 0 1 0 90L0 92.5A82.5 82.5 0 0 0 0 -72.5Z', fill:'rgba(184,137,42,.45)', stroke:'#7A5A14', 'stroke-width':0.2}, ns);
+  const arc = el('path', {d:'M0 -70A80 80 0 0 1 0 90', fill:'none', stroke:'#2F64A8', 'stroke-width':0.6}, ns);
+  const tank = buildTank(ns, false);
+  const bus = buildSection(ns, {ext:true});
+  el('line', {x1:0, x2:0, y1:-76, y2:96, stroke:'#18213F', 'stroke-width':0.25, 'stroke-dasharray':'2 1.4'}, ns);
+  const barHi = el('path', {d:polyD(RR(0, 0.8125, -36, 22.6)), fill:'none', stroke:'#C9A043', 'stroke-width':0.55}, ns);
+  const gnd = el('g', {fill:'none', stroke:'#2F64A8', 'stroke-width':0.55}, ns);
+  el('path', {d:polyD(TANK.lid) + polyD(TANK.wall) + polyD(TANK.bottom) + polyD(PARTS.flange) + polyD(PARTS.paint)}, gnd);
+  const lab = el('g', {}, sv), ink = '#18213F';
+  function callout(vb, r, y, ty, s, col){
+    const g = el('g', {}, lab), [px, py] = toPx(ns, vb, r, y);
+    leader(g, 850, ty - 7, px, py, col || ink, 1.6); text(g, 858, ty, s, {fs:21, fill:col || ink}); return g;
+  }
+  const L0 = el('g', {}, lab); L0.appendChild(callout(VA, 26, -30, 500, L.tank)); L0.appendChild(callout(VA, 0.5, -32, 650, L.ext));
+  { const [ax] = toPx(ns, VA, 0, 0); text(L0, ax + 8, 205, L.axis, {fs:19, fill:ink}); }
+  const L1 = callout(VA, 80 * Math.cos(0.6), -10 + 80 * Math.sin(0.6), 300, L.sphere, '#2F64A8');
+  const L2 = callout(VA, 81.2 * Math.cos(-0.35), -10 + 81.2 * Math.sin(-0.35), 760, L.layer, '#7A5A14');
+  const L3 = el('g', {}, lab); L3.appendChild(callout(VB, 0.4, 12, 300, L.vbar, '#8A6510')); L3.appendChild(callout(VB, 0.4, -28, 700, L.vbar, '#8A6510'));
+  const L4 = el('g', {}, lab);
+  L4.appendChild(callout(VB, 26, -20, 520, L.g1, '#2F64A8')); L4.appendChild(callout(VB, 3.6, 0.3, 380, L.g2, '#2F64A8')); L4.appendChild(callout(VB, 2.11, -6, 450, L.g3, '#2F64A8'));
+  const mm = el('g', {}, sv), mmk = 0.8, mcx = 712, mcy = 852;
+  const MP = (r, y) => [mcx + r * mmk, mcy - (y + 10) * mmk];
+  el('rect', {x:mcx - 16, y:mcy - 80 * mmk - 24, width:80 * mmk + 34, height:160 * mmk + 46, rx:4, fill:'rgba(246,240,228,.95)', stroke:'#8E6B1E', 'stroke-width':1.2}, mm);
+  el('path', {d:`M${mcx} ${mcy - 80 * mmk}A${80 * mmk} ${80 * mmk} 0 0 1 ${mcx} ${mcy + 80 * mmk}Z`, fill:'rgba(47,100,168,.12)', stroke:'#2F64A8', 'stroke-width':1.2}, mm);
+  { const [tx, ty] = MP(0, 0); el('rect', {x:tx, y:ty, width:26 * mmk, height:48 * mmk, fill:'rgba(210,176,78,.3)', stroke:'#5B6B85', 'stroke-width':1}, mm); }
+  { const [zx, zy] = MP(VB[0], -VB[1]); el('rect', {x:zx, y:zy, width:VB[2] * mmk, height:VB[3] * mmk, fill:'none', stroke:'#B3362B', 'stroke-width':1.6, 'stroke-dasharray':'4 3'}, mm); }
+  text(mm, mcx - 8, mcy - 80 * mmk - 8, 'Vista actual', {fs:17, fill:'#3A4363', fw:700});
+  S[4] = {
+    el:$('#s5'),
+    base(){ ns.setAttribute('viewBox', VA.join(' ')); gsap.set([air, layer, barHi, gnd, L1, L2, L3, L4, mm], {opacity:0}); gsap.set(L0, {opacity:1}); gsap.set(arc, {opacity:1}); hideStroke(arc); void tank; void bus; },
+    steps:[ () => {},
+      tl => { drawStroke(tl, arc, {duration:1.0, ease:EIO}, 0); tl.to(air, {opacity:1, duration:0.6, ease:EO}, 0.4).to(L1, {opacity:1, duration:0.4, ease:EO}, 0.9); },
+      tl => { tl.to(layer, {opacity:1, duration:0.5, ease:EO}, 0).to(L2, {opacity:1, duration:0.4, ease:EO}, 0.3); },
+      tl => {
+        tl.to([L0, L1, L2], {opacity:0, duration:0.25, ease:EO}, 0)
+          .to(ns, {attr:{viewBox:VB.join(' ')}, duration:1.3, ease:EIO}, 0.1)
+          .to(barHi, {opacity:1, duration:0.4, ease:EO}, 1.3).to(L3, {opacity:1, duration:0.4, ease:EO}, 1.4)
+          .fromTo(mm, {opacity:0, scale:0.9, transformOrigin:'100% 100%'}, {opacity:1, scale:1, duration:0.45, ease:EO}, 1.2);
+      },
+      tl => { tl.to(gnd, {opacity:1, duration:0.45, ease:EO}, 0).to(L4, {opacity:1, duration:0.4, ease:EO}, 0.25); }
+    ]
+  };
+})();
+
+/* ---------- VI · malla ilustrativa ---------- */
+(function(){
+  const sv = $('#sv6'); sv.setAttribute('viewBox', '0 0 1920 972');
+  const box = {x:172, y:182, w:676, h:730}, VB = [-0.3, -5.0, 7.3, 7.88];
+  const ns = nestSvg(sv, box, VB);
+  el('rect', {x:-0.3, y:-5.0, width:7.6, height:5.0, fill:'#DCE6F2'}, ns);
+  el('rect', {x:-0.3, y:0.45, width:7.6, height:3, fill:'#EFE3BC'}, ns);
+  buildTank(ns, false, {noOil:true});
+  buildSection(ns, {});
+  /* nodos: árbol cuaternario con tamaño objetivo h(r, y) */
+  const R = rng(5), box2 = [0, 7.0, -3.06, 5.0];
+  const inMetal = (r, y) => r < 0.8125 || dRect(r, y, [2.12, 2.45, -0.9, 1.0]) === 0 || dRect(r, y, [2.45, 3.75, 0, 0.55]) === 0 || dRect(r, y, [2.6, 7.3, -0.45, 0]) === 0 || dRect(r, y, [3.05, 3.45, 0.55, 0.95]) === 0;
+  function pointsFor(hf){
+    const pts = [];
+    function qt(x0, y0, s){
+      const cx = x0 + s / 2, cy = y0 + s / 2;
+      if (s > hf(cx, cy) && s > 0.04){ const h = s / 2; qt(x0, y0, h); qt(x0 + h, y0, h); qt(x0, y0 + h, h); qt(x0 + h, y0 + h, h); }
+      else pts.push([cx + (R() - 0.5) * s * 0.55, cy + (R() - 0.5) * s * 0.55]);
+    }
+    for (let x = 0; x < 7.0; x += 1.0) for (let y = -3.06; y < 5.0; y += 1.0) qt(x, y, 1.0);
+    const lines = [[0.8125, 'v'], [1.0, 'v'], [1.06, 'v'], [1.17, 'v'], [2.05, 'v'], [2.12, 'v'], [2.45, 'v'], [0, 'h'], [0.55, 'h'], [-0.45, 'h'], [1.0, 'h'], [-0.9, 'h']];
+    lines.forEach(([c, t]) => {
+      for (let u = (t === 'v' ? -3.06 : 0); u <= (t === 'v' ? 5.0 : 7.0); ){
+        const p = t === 'v' ? [c, u] : [u, c]; pts.push([p[0] + (R() - 0.5) * 1e-4, p[1] + (R() - 0.5) * 1e-4]); u += hf(p[0], p[1]);
+      }
+    });
+    for (let u = -3.06; u <= 5.0; u += hf(0, u)) pts.push([0, u]);
+    for (let u = 0; u <= 7.0; u += hf(u, 5)) { pts.push([u, 5.0]); pts.push([u, -3.06]); }
+    for (let u = -3.06; u <= 5.0; u += hf(7, u)) pts.push([7.0, u]);
+    return pts.filter(p => p[0] >= -1e-3 && p[0] <= 7.001 && p[1] >= -3.061 && p[1] <= 5.001);
+  }
+  function delaunay(pts){
+    const n = pts.length; let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    pts.forEach(p => { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); });
+    const dm = Math.max(x1 - x0, y1 - y0) * 20, mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    const P = pts.concat([[mx - dm, my - dm], [mx, my + dm], [mx + dm, my - dm]]);
+    function T(a, b, c){
+      const A = P[a], B = P[b], C = P[c], d = 2 * (A[0] * (B[1] - C[1]) + B[0] * (C[1] - A[1]) + C[0] * (A[1] - B[1]));
+      const a2 = A[0] * A[0] + A[1] * A[1], b2 = B[0] * B[0] + B[1] * B[1], c2 = C[0] * C[0] + C[1] * C[1];
+      const ux = (a2 * (B[1] - C[1]) + b2 * (C[1] - A[1]) + c2 * (A[1] - B[1])) / d, uy = (a2 * (C[0] - B[0]) + b2 * (A[0] - C[0]) + c2 * (B[0] - A[0])) / d;
+      return {a, b, c, x:ux, y:uy, r2:(A[0] - ux) ** 2 + (A[1] - uy) ** 2};
+    }
+    let tris = [T(n, n + 1, n + 2)];
+    for (let i = 0; i < n; i++){
+      const p = P[i], keep = [], edges = new Map();
+      for (const t of tris){
+        if ((p[0] - t.x) ** 2 + (p[1] - t.y) ** 2 < t.r2){
+          [[t.a, t.b], [t.b, t.c], [t.c, t.a]].forEach(([u, v]) => { const key = u < v ? u + ',' + v : v + ',' + u; if (edges.has(key)) edges.delete(key); else edges.set(key, [u, v]); });
+        } else keep.push(t);
+      }
+      tris = keep; for (const [u, v] of edges.values()) tris.push(T(u, v, i));
+    }
+    return {P, tris:tris.filter(t => t.a < n && t.b < n && t.c < n && isFinite(t.r2))};
+  }
+  function meshGroup(hf, nodeR){
+    const {P, tris} = delaunay(pointsFor(hf)), seen = new Set(), used = new Set(); let d = '';
+    tris.forEach(t => {
+      const cx = (P[t.a][0] + P[t.b][0] + P[t.c][0]) / 3, cy = (P[t.a][1] + P[t.b][1] + P[t.c][1]) / 3;
+      if (inMetal(cx, cy)) return;
+      [[t.a, t.b], [t.b, t.c], [t.c, t.a]].forEach(([u, v]) => {
+        used.add(u); used.add(v);
+        const key = u < v ? u + ',' + v : v + ',' + u; if (seen.has(key)) return; seen.add(key);
+        d += 'M' + P[u][0].toFixed(3) + ' ' + (-P[u][1]).toFixed(3) + 'L' + P[v][0].toFixed(3) + ' ' + (-P[v][1]).toFixed(3);
+      });
+    });
+    const g = el('g', {}, ns), mesh = el('path', {d, fill:'none', stroke:'#18213F', 'stroke-width':0.9, 'stroke-opacity':0.85, 'vector-effect':'non-scaling-stroke'}, g);
+    let nd = ''; used.forEach(i => { const p = P[i]; nd += `M${(p[0] - nodeR).toFixed(3)} ${(-p[1]).toFixed(3)}a${nodeR} ${nodeR} 0 1 0 ${2 * nodeR} 0a${nodeR} ${nodeR} 0 1 0 ${-2 * nodeR} 0`; });
+    const nodes = el('path', {d:nd, fill:'#B3362B'}, g);
+    return {g, mesh, nodes, count:tris.length};
+  }
+  const coarse = meshGroup(() => 0.62, 0.035);
+  const fine = meshGroup((r, y) => Math.min(0.62, 0.07 + 0.2 * dRect(r, y, [0.8, 1.2, -1.2, 2.2]), 0.1 + 0.22 * dRect(r, y, [2.05, 3.75, -0.9, 1.0])), 0.016);
+  const d = el('defs', {}, ns), cp = el('clipPath', {id:'clip6', clipPathUnits:'userSpaceOnUse'}, d);
+  const clipR = el('rect', {x:-0.3, y:-5.2, width:0, height:8.5}, cp);
+  coarse.mesh.setAttribute('clip-path', 'url(#clip6)');
+  const refineBox = el('rect', {x:0.6, y:-2.4, width:3.4, height:3.6, fill:'none', stroke:'#B3362B', 'stroke-width':0.035, 'stroke-dasharray':'.12 .08'}, ns);
+  const lab = el('g', {}, sv), ink = '#18213F';
+  const tag = (r, y, s, dx, dy) => { const [px, py] = toPx(ns, VB, r, y); const g = el('g', {}, lab); leader(g, px + dx, py + dy - 7, px, py, ink, 1.4); text(g, px + dx + (dx < 0 ? -6 : 6), py + dy, s, {fs:19, fill:ink, anchor:dx < 0 ? 'end' : 'start', halo:'#F6F0E4'}); return g; };
+  const LBL = el('g', {}, lab);
+  { const [bx, by] = toPx(ns, VB, 0.4, 2.6); text(LBL, bx + 7, by, 'barra de cobre', {fs:19, fill:'#FFF6E8', anchor:'middle', rot:-90, halo:'#7A431B', hw:3}); }
+  [[0.9, 3.6, 'aceite', 70, -48], [1.03, 2.9, 'Mylar', 90, -30], [1.6, 4.3, 'cerámica', 80, -36], [3.1, 0.3, 'brida', 70, 60], [5.6, -0.2, 'tapa del tanque', -20, 52], [5.6, 3.6, 'aire', 0, 0], [5.4, -2.2, 'aceite del tanque', 0, 0]]
+    .forEach(([r, y, s, dx, dy]) => { if (dx === 0 && dy === 0){ const [px, py] = toPx(ns, VB, r, y); text(LBL, px, py, s, {fs:19, fill:ink, anchor:'middle', halo:'#F6F0E4'}); } else LBL.appendChild(tag(r, y, s, dx, dy)); });
+  const refLbl = el('g', {}, lab);
+  { const [px, py] = toPx(ns, VB, 0.6, 1.2); text(refLbl, px + 4, py - 10, L.refine, {fs:19, fill:'#B3362B', halo:'#F6F0E4'}); }
+  text(sv, 510, 938, L.meshCap, {fs:18, anchor:'middle', fill:'#3A4363', fw:600});
+  S[5] = {
+    el:$('#s6'),
+    base(){ gsap.set(clipR, {attr:{width:0}}); gsap.set(coarse.mesh, {opacity:1}); gsap.set([coarse.nodes, fine.g, refineBox, refLbl], {opacity:0}); gsap.set(coarse.g, {opacity:1}); gsap.set(LBL, {opacity:1}); },
+    steps:[ () => {},
+      tl => { tl.to(clipR, {attr:{width:7.6}, duration:1.0, ease:EIO}, 0).to(LBL, {opacity:0, duration:0.3, ease:EO}, 0); },
+      tl => { tl.to(coarse.nodes, {opacity:1, duration:0.4, ease:EO}, 0); },
+      tl => { tl.to(coarse.g, {opacity:0, duration:0.5, ease:EO}, 0).to(fine.g, {opacity:1, duration:0.6, ease:EO}, 0.15).to([refineBox, refLbl], {opacity:1, duration:0.4, ease:EO}, 0.6); }
+    ]
+  };
+})();
+
+/* ---------- mapas compartidos por VII, VIII y IX ---------- */
+const MAPS = {};
+function buildMaps(){
+  if (MAPS.ready) return;
+  MAPS.vLo = renderField(Vdid, 0, 30, -42, 27, 0.1, 20);
+  MAPS.vHi = renderField(Vdid, 0, 6, -11, 6, 0.02, 20);
+  MAPS.eLo = renderField(Edid, 0, 30, -42, 27, 0.1, 2.5);
+  MAPS.eHi = renderField(Edid, 0, 6, -11, 6, 0.01, 2.5);
+  const levels = [18, 16, 14, 12, 10, 8, 6, 4, 2];
+  const lo = contourPaths(Vdid, 0, 30, -42, 27, 0.12, levels, [0, 5, -11, 5]);
+  const hi = contourPaths(Vdid, 0, 5, -11, 5, 0.025, levels);
+  MAPS.levels = levels; MAPS.cont = lo.map((d, i) => d + hi[i]);
+  MAPS.arrows = arrowPath([[3.5,24],[6.5,21],[9,15],[7,9.5],[11,6],[15,12],[13,20],[19,4],[22,16],[5.5,3.4],
+    [4,-12],[4,-22],[3.5,-31],[8,-6],[9,-16],[9,-28],[14,-11],[15,-24],[13,-36],[20,-18],[21,-32]], 2.6);
+  MAPS.ready = true;
+}
+function colorbar(parent, x, y, h, mode){
+  const g = el('g', {}, parent), ink = '#18213F';
+  el('rect', {x, y, width:26, height:h, fill:'url(#gCmap)', stroke:ink, 'stroke-width':1}, g);
+  const max = mode === 'V' ? 20 : 2.5, ticks = mode === 'V' ? [0, 4, 8, 12, 16, 20] : [0, 0.5, 1, 1.5, 2, 2.5];
+  ticks.forEach(t => { const yy = y + h - t / max * h; el('line', {x1:x + 26, x2:x + 34, y1:yy, y2:yy, stroke:ink, 'stroke-width':1.5}, g); text(g, x + 40, yy + 7, mode === 'V' ? String(t) : fmt(t, 1), {fs:19, fill:ink}); });
+  text(g, x - 2, y - 24, mode === 'V' ? 'V (kV)' : '|E| (kV/mm)', {fs:20, fill:ink, fw:700});
+  return g;
+}
+function matLegend(parent, x, y){
+  const g = el('g', {}, parent), ink = '#18213F';
+  [['url(#gCopper)', 'cobre (barra)'], ['#D9BB5E', 'aceite'], ['#2F8C78', 'Mylar'], ['url(#hatchCerPx)', 'cerámica'], ['#A9B4C5', 'aluminio (brida)'], ['#353941', 'pintura semicond.'], ['#5B6B85', 'tanque'], ['#DCE6F2', 'aire']]
+    .forEach(([f, s], i) => { el('rect', {x, y:y + i * 40, width:26, height:26, fill:f === 'url(#hatchCerPx)' ? '#E4E0D7' : f, stroke:ink, 'stroke-width':1}, g); text(g, x + 36, y + i * 40 + 20, s, {fs:19, fill:ink}); });
+  return g;
+}
+const MAPBOX = {x:150, y:215, w:640, h:735}, VBM = [-30, -27, 60, 69];
+function buildMapStack(ns, o){
+  o = o || {};
+  const geo = el('g', {}, ns);
+  el('rect', {x:-40, y:-40, width:80, height:40, fill:'#DCE6F2'}, geo);
+  buildTank(geo, true, {oil:'#EFE3BC'});
+  buildSection(geo, {both:true, ext:true});
+  const vL = el('g', {}, ns); placeImg(vL, MAPS.vLo, true); placeImg(vL, MAPS.vHi, true);
+  const cont = el('g', {}, vL), levelEls = [];
+  if (o.contours){
+    MAPS.cont.forEach(d => {
+      const lg = el('g', {}, cont);
+      el('path', {d, fill:'none', stroke:'rgba(255,255,255,.75)', 'stroke-width':2.4, 'vector-effect':'non-scaling-stroke'}, lg);
+      el('path', {d, fill:'none', stroke:'#0B1640', 'stroke-width':1.1, 'vector-effect':'non-scaling-stroke'}, lg);
+      el('path', {d, fill:'none', stroke:'rgba(255,255,255,.75)', 'stroke-width':2.4, 'vector-effect':'non-scaling-stroke', transform:'scale(-1 1)'}, lg);
+      el('path', {d, fill:'none', stroke:'#0B1640', 'stroke-width':1.1, 'vector-effect':'non-scaling-stroke', transform:'scale(-1 1)'}, lg);
+      levelEls.push(lg);
+    });
+  }
+  let arrows = null;
+  if (o.arrows){
+    arrows = el('g', {}, vL);
+    [1, -1].forEach(sx => {
+      el('path', {d:MAPS.arrows, fill:'none', stroke:'#0B1640', 'stroke-width':6, 'stroke-linecap':'round', 'stroke-linejoin':'round', 'vector-effect':'non-scaling-stroke', transform:`scale(${sx} 1)`}, arrows);
+      el('path', {d:MAPS.arrows, fill:'none', stroke:'#FFFFFF', 'stroke-width':2.6, 'stroke-linecap':'round', 'stroke-linejoin':'round', 'vector-effect':'non-scaling-stroke', transform:`scale(${sx} 1)`}, arrows);
+    });
+  }
+  const eL = el('g', {}, ns); placeImg(eL, MAPS.eLo, true); placeImg(eL, MAPS.eHi, true);
+  const out = el('g', {}, ns);
+  buildSection(out, {both:true, ext:true, outline:true});
+  buildTank(out, true, {noOil:true, metal:'none'});
+  $$('path', out).forEach(p => { if (!p.getAttribute('stroke') || p.getAttribute('stroke') === '#262B3C'){ p.setAttribute('stroke', 'rgba(255,255,255,.55)'); } });
+  return {geo, vL, eL, out, levelEls, arrows};
+}
+/* Capa del mapa: los cambios se agregan al timeline del paso, así «Saltar» siempre llega al estado final */
+/* revelado del mapa desde la barra central: una elipse que crece a lo largo del conductor */
+function revealFromBar(ns, layer, id){
+  const d = el('defs', {}, ns), cp = el('clipPath', {id, clipPathUnits:'userSpaceOnUse'}, d);
+  const e = el('ellipse', {cx:0, cy:4, rx:90, ry:100}, cp);
+  layer.setAttribute('clip-path', `url(#${id})`);
+  return {
+    full(){ gsap.set(e, {attr:{rx:90, ry:100}}); },
+    grow(tl, at, dur){ tl.fromTo(e, {attr:{rx:0.9, ry:30}}, {attr:{rx:90, ry:100}, duration:dur, ease:EIO}, at); }
+  };
+}
+function makeModeCtl(sceneEl, L){
+  const btns = $$('[data-mode]', sceneEl);
+  const press = m => btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+  function apply(m, tl, pos){
+    const T = tl || gsap.timeline({defaults:{overwrite:'auto'}}), d = RM ? 0.2 : 0.3, at = pos || 0;
+    T.call(press, [m], at)
+     .to(L.vL, {opacity:m === 'V' ? 1 : 0, duration:d, ease:EO}, at)
+     .to(L.eL, {opacity:m === 'E' ? 1 : 0, duration:d, ease:EO}, at)
+     .to(L.cbV, {opacity:m === 'V' ? 1 : 0, duration:d, ease:EO}, at)
+     .to(L.cbE, {opacity:m === 'E' ? 1 : 0, duration:d, ease:EO}, at)
+     .to(L.leg, {opacity:m === 'geo' ? 1 : 0, duration:d, ease:EO}, at);
+    if (!tl && gsap.isShim) T.progress(1);
+    return T;
+  }
+  function set(m){
+    press(m);
+    gsap.set(L.vL, {opacity:m === 'V' ? 1 : 0}); gsap.set(L.eL, {opacity:m === 'E' ? 1 : 0});
+    gsap.set(L.cbV, {opacity:m === 'V' ? 1 : 0}); gsap.set(L.cbE, {opacity:m === 'E' ? 1 : 0}); gsap.set(L.leg, {opacity:m === 'geo' ? 1 : 0});
+  }
+  btns.forEach(b => b.addEventListener('click', () => apply(b.dataset.mode)));
+  return {apply, set};
+}
+
+/* ---------- VII · potencial ---------- */
+function buildS7(){
+  const sv = $('#sv7'), ns = nestSvg(sv, MAPBOX, VBM);
+  const st = buildMapStack(ns, {contours:true, arrows:true});
+  const reveal = revealFromBar(ns, st.vL, 'clip7');
+  el('rect', {x:MAPBOX.x, y:MAPBOX.y, width:MAPBOX.w, height:MAPBOX.h, fill:'none', stroke:'#18213F', 'stroke-width':2}, sv);
+  const cbV = colorbar(sv, 820, 240, 690, 'V'), cbE = colorbar(sv, 820, 240, 690, 'E'), leg = matLegend(sv, 820, 240);
+  const cbMask = el('rect', {x:818, y:238, width:30, height:694, fill:'#F1EADC'}, cbV);
+  const keyEq = el('g', {}, sv), keyE = el('g', {}, sv);
+  el('rect', {x:162, y:868, width:318, height:72, rx:4, fill:'rgba(11,22,64,.85)', stroke:'rgba(233,203,124,.5)', 'stroke-width':1}, keyEq);
+  el('line', {x1:178, x2:222, y1:890, y2:890, stroke:'rgba(255,255,255,.75)', 'stroke-width':2.4}, keyEq);
+  el('line', {x1:178, x2:222, y1:890, y2:890, stroke:'#0B1640', 'stroke-width':1.1}, keyEq);
+  text(keyEq, 234, 896, 'Equipotencial, cada 2 kV', {fs:18, fill:'#F2EBDC'});
+  el('path', {d:'M178 920H220M211 914L220 920L211 926', fill:'none', stroke:'#FFFFFF', 'stroke-width':2.6, 'stroke-linecap':'round', 'stroke-linejoin':'round'}, keyE);
+  text(keyE, 234, 926, 'Dirección de E (sin escala)', {fs:18, fill:'#F2EBDC'});
+  const lab = el('g', {}, sv);
+  const [cx, cy] = toPx(ns, VBM, 0, 21.5); leader(lab, cx - 70, cy - 26, cx - 8, cy, '#F2EBDC', 1.8);
+  text(lab, cx - 76, cy - 32, L.vmax, {fs:20, fill:'#F2EBDC', halo:'#0B1640', anchor:'end'});
+  const [fx, fy] = toPx(ns, VBM, 2.6, 0.4);
+  const ringC = el('circle', {cx:fx, cy:fy, r:22, fill:'none', stroke:'#B3362B', 'stroke-width':3.5}, lab);
+  leader(lab, fx + 150, fy + 64, fx + 18, fy + 14, '#F2EBDC', 1.8);
+  text(lab, fx + 156, fy + 70, 'aquí |E| es mayor', {fs:20, fill:'#F2EBDC', halo:'#0B1640'});
+  void ringC;
+  const mode = makeModeCtl($('#s7'), {vL:st.vL, eL:st.eL, cbV, cbE, leg});
+  S[6].base = function(){ mode.set('geo'); reveal.full(); gsap.set(cbMask, {scaleY:0, transformOrigin:'50% 0%'}); gsap.set(st.levelEls, {opacity:0}); gsap.set(st.arrows, {opacity:0}); gsap.set(lab, {opacity:0}); gsap.set([keyEq, keyE], {opacity:0}); };
+  S[6].steps = [ () => {},
+    tl => { mode.apply('V', tl, 0); reveal.grow(tl, 0, 1.3); tl.fromTo(cbMask, {scaleY:1}, {scaleY:0, duration:1.0, ease:EIO}, 0.15); },
+    tl => { tl.to(st.levelEls, {opacity:1, duration:0.35, stagger:0.09, ease:EO}, 0.05).to(keyEq, {opacity:1, duration:0.35, ease:EO}, 0.5); },
+    tl => { tl.to(st.arrows, {opacity:1, duration:0.5, ease:EO}, 0).to(keyE, {opacity:1, duration:0.35, ease:EO}, 0.3); },
+    tl => { mode.apply('V', tl, 0); tl.to(lab, {opacity:1, duration:0.4, ease:EO}, 0); }
+  ];
+}
+S[6] = {el:$('#s7'), lazy:buildS7, base(){}, steps:[() => {}, () => {}, () => {}, () => {}, () => {}]};
+
+/* ---------- VIII · |E|, acercamiento y corte radial ---------- */
+function buildS8(){
+  const sv = $('#sv8'), ns = nestSvg(sv, MAPBOX, VBM), VZ = [-0.6, -5.0, 13.5, 15.5];
+  const st = buildMapStack(ns, {});
+  const reveal = revealFromBar(ns, st.eL, 'clip8');
+  el('rect', {x:MAPBOX.x, y:MAPBOX.y, width:MAPBOX.w, height:MAPBOX.h, fill:'none', stroke:'#18213F', 'stroke-width':2}, sv);
+  const cbV = colorbar(sv, 820, 240, 690, 'V'), cbE = colorbar(sv, 820, 240, 690, 'E'), leg = matLegend(sv, 820, 240);
+  /* corte radial en la zona de la brida */
+  const cutG = el('g', {}, ns);
+  el('line', {x1:0, x2:4.5, y1:-YCUT, y2:-YCUT, stroke:'#FFFFFF', 'stroke-width':4, 'vector-effect':'non-scaling-stroke'}, cutG);
+  el('line', {x1:0, x2:4.5, y1:-YCUT, y2:-YCUT, stroke:'#B3362B', 'stroke-width':2.2, 'stroke-dasharray':'7 4', 'vector-effect':'non-scaling-stroke'}, cutG);
+  [3.4, 1.9].forEach(r => el('path', {d:`M${r + 0.2} ${-YCUT - 0.17}L${r} ${-YCUT}L${r + 0.2} ${-YCUT + 0.17}`, fill:'none', stroke:'#FFFFFF', 'stroke-width':2, 'stroke-linecap':'round', 'vector-effect':'non-scaling-stroke'}, cutG));
+  const hit = el('line', {class:'pe', x1:0, x2:4.5, y1:-YCUT, y2:-YCUT, stroke:'transparent', 'stroke-width':0.6, style:'cursor:ew-resize'}, cutG);
+  const knob = el('g', {class:'slider-knob pe', tabindex:'0', role:'slider', 'aria-label':'Posición sobre el corte radial', 'aria-valuemin':'0', 'aria-valuemax':'4.5', 'aria-valuenow':'0', style:'cursor:grab'}, ns);
+  const knobRing = el('circle', {class:'knob-ring', cx:0, cy:-YCUT, r:0.3, fill:'none', stroke:'#FFFFFF', 'stroke-width':0.07}, knob);
+  const knobDot = el('circle', {cx:0, cy:-YCUT, r:0.17, fill:'#B3362B', stroke:'#FFFFFF', 'stroke-width':0.04}, knob);
+  /* zonas reportadas */
+  const zones = el('g', {}, sv);
+  [[3, 0.9, 0.5, L.z3], [2, 0.9, 2.8, L.z2], [1, 0.9, -9.6, L.z1]].forEach(([n, r, y, s]) => {
+    const [px, py] = toPx(ns, VZ, r, y), bx = 560, by = n === 3 ? py + 36 : py, zg = el('g', {}, zones);
+    leader(zg, bx - 16, by, px + 4, py, '#FFFFFF', 1.8);
+    el('rect', {x:bx - 16, y:by - 16, width:32, height:32, fill:'#F2EBDC', stroke:'#18213F', 'stroke-width':1.5}, zg);
+    text(zg, bx, by + 7, String(n), {fs:20, anchor:'middle', fill:'#18213F', fw:700});
+    text(zg, bx + 24, by + 7, s, {fs:20, fill:'#F2EBDC', halo:'#0B1640'});
+  });
+  const cutLbl = el('g', {}, sv);
+  { const [px, py] = toPx(ns, VZ, 4.5, YCUT); text(cutLbl, px + 10, py - 30, L.cut, {fs:19, fill:'#F2EBDC', halo:'#0B1640'}); }
+  /* gráfica (reconstrucción aproximada de la Fig. 10) */
+  const GX = 1110, GY = 196, GW = 700, GH = 370, EMAX = 2.2;
+  const sx = s => GX + s / 4.5 * GW, sy = e => GY + GH - e / EMAX * GH, ink = '#18213F', ink2 = '#3A4363';
+  const gr = el('g', {}, sv);
+  [[0, 2.45, 'rgba(47,100,168,.06)'], [2.45, 3.33, 'rgba(160,150,135,.18)'], [3.33, 3.44, 'rgba(217,187,94,.35)'], [3.44, 3.50, 'rgba(47,140,120,.35)'], [3.50, 3.69, 'rgba(217,187,94,.35)'], [3.69, 4.5, 'rgba(194,118,55,.18)']]
+    .forEach(([a, b, f]) => el('rect', {x:sx(a), y:GY, width:sx(b) - sx(a), height:GH, fill:f}, gr));
+  for (let s = 0; s <= 4.5001; s += 0.5){ el('line', {x1:sx(s), x2:sx(s), y1:GY + GH, y2:GY + GH + 7, stroke:ink, 'stroke-width':1.5}, gr); text(gr, sx(s), GY + GH + 30, s === 0 ? '0' : fmt(s, 1), {fs:18, anchor:'middle', fill:ink2, fw:400}); }
+  [0, 0.5, 1, 1.5, 2].forEach(e => { el('line', {x1:GX, x2:GX + GW, y1:sy(e), y2:sy(e), stroke:'rgba(24,33,63,.12)', 'stroke-width':1}, gr); text(gr, GX - 10, sy(e) + 6, e === 0 ? '0' : fmt(e, 1), {fs:18, anchor:'end', fill:ink2, fw:400}); });
+  el('path', {d:`M${GX} ${GY}V${GY + GH}H${GX + GW}`, stroke:ink, 'stroke-width':2, fill:'none'}, gr);
+  text(gr, GX + GW / 2, GY + GH + 58, 'Longitud de arco s (in), del aire hacia el eje', {fs:19, anchor:'middle', fill:ink});
+  text(gr, GX - 58, GY + GH / 2, '|E| (kV/mm) = 10⁶ V/m', {fs:19, anchor:'middle', fill:ink, rot:-90});
+  text(gr, GX, GY - 14, 'Reconstrucción aproximada de la Fig. 10 (lectura visual)', {fs:18, fill:ink2});
+  el('path', {d:'M' + FIG10.map(p => sx(p[0]).toFixed(1) + ' ' + sy(p[1]).toFixed(1)).join('L'), stroke:'#16325F', 'stroke-width':3, fill:'none', 'stroke-linejoin':'round'}, gr);
+  const lab = (s, e, tx, ty, str) => { if (tx != null) leader(gr, tx + 6, ty - 6, sx(s), sy(e), ink2, 1.3); text(gr, tx != null ? tx : sx(s), ty != null ? ty : sy(e), str, {fs:18, anchor:tx != null ? 'end' : 'middle', fill:ink, halo:'#F1EADC', hw:4}); };
+  lab(3.62, 1.72, sx(3.12), sy(1.95), 'Aceite pegado a la barra');
+  lab(3.38, 1.33, sx(3.12), sy(1.5), 'Aceite pegado a la cerámica');
+  lab(3.47, 0.66, sx(3.12), sy(1.0), 'Tubo de Mylar');
+  lab(2.88, 0.55, null, null, 'Cerámica'); lab(1.2, 0.12, null, null, 'Aire exterior'); lab(4.18, 0.12, null, null, 'Barra central');
+  const peak = el('g', {}, gr);
+  const peakBox = el('rect', {x:sx(3.49), y:sy(1.9), width:sx(3.77) - sx(3.49), height:sy(1.48) - sy(1.9), fill:'none', stroke:'#B3362B', 'stroke-width':2.5}, peak);
+  text(peak, sx(3.8), sy(1.98), 'zona de riesgo', {fs:18, fill:'#B3362B', fw:700});
+  const cur = el('line', {y1:GY, y2:GY + GH, stroke:'#B3362B', 'stroke-width':2}, gr);
+  const dot = el('circle', {r:7, fill:'#B3362B', stroke:'#fff', 'stroke-width':2}, gr);
+  const ghit = el('rect', {class:'pe', x:GX, y:GY, width:GW, height:GH, fill:'transparent', style:'cursor:ew-resize'}, gr);
+  const P = {s:0};
+  const rdS = $('#rd-s'), rdM = $('#rd-m'), rdE = $('#rd-e');
+  function setS(s){
+    P.s = clamp(s, 0, 4.5); const r = 4.5 - P.s, e = fig10(P.s);
+    knobRing.setAttribute('cx', r); knobDot.setAttribute('cx', r);
+    cur.setAttribute('x1', sx(P.s)); cur.setAttribute('x2', sx(P.s)); dot.setAttribute('cx', sx(P.s)); dot.setAttribute('cy', sy(e));
+    rdS.textContent = fmt(P.s) + ' in'; rdM.textContent = materialAt(P.s); rdE.textContent = '≈ ' + fmt(e) + ' kV/mm';
+    knob.setAttribute('aria-valuenow', P.s.toFixed(2));
+    knob.setAttribute('aria-valuetext', `s = ${fmt(P.s)} in, ${materialAt(P.s)}, ${fmt(e)} kV/mm`);
+  }
+  setS(0);
+  /* arrastre con puntero (marcador, línea de corte y gráfica) */
+  function svgPt(ev){ const m = sv.getScreenCTM().inverse(), p = sv.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; return p.matrixTransform(m); }
+  let drag = null;
+  function onMove(ev){
+    if (!drag) return; const p = svgPt(ev);
+    if (drag === 'map'){ const [r] = fromPx(ns, VZ, p.x, p.y); setS(4.5 - r); }
+    else setS((p.x - GX) / GW * 4.5);
+  }
+  function start(kind){ return ev => { if (P.locked) return; drag = kind; ev.preventDefault(); onMove(ev); window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', stop, {once:true}); }; }
+  function stop(){ drag = null; window.removeEventListener('pointermove', onMove); }
+  knob.addEventListener('pointerdown', start('map')); hit.addEventListener('pointerdown', start('map')); ghit.addEventListener('pointerdown', start('graph'));
+  knob.addEventListener('keydown', ev => {
+    const st2 = ev.shiftKey ? 0.01 : 0.05;
+    if (ev.key === 'ArrowUp'){ setS(P.s + st2); ev.preventDefault(); ev.stopPropagation(); }
+    else if (ev.key === 'ArrowDown'){ setS(P.s - st2); ev.preventDefault(); ev.stopPropagation(); }
+    else if (ev.key === 'Home'){ setS(0); ev.preventDefault(); ev.stopPropagation(); }
+    else if (ev.key === 'End'){ setS(4.5); ev.preventDefault(); ev.stopPropagation(); }
+  });
+  const mode = makeModeCtl($('#s8'), {vL:st.vL, eL:st.eL, cbV, cbE, leg});
+  S[7].base = function(){
+    ns.setAttribute('viewBox', VBM.join(' ')); mode.set('E'); setS(0); reveal.full(); hideStroke(peakBox);
+    gsap.set([zones, cutG, knob, gr, cutLbl, peak], {autoAlpha:0}); knob.setAttribute('tabindex', '-1'); knob.setAttribute('aria-hidden', 'true'); P.locked = true;
+  };
+  S[7].steps = [ tl => { reveal.grow(tl, 0.1, 1.2); },
+    tl => {
+      tl.to(ns, {attr:{viewBox:VZ.join(' ')}, duration:1.4, ease:EIO}, 0).set(zones, {autoAlpha:1}, 1.3)
+        .fromTo(Array.from(zones.children), {opacity:0, x:26}, {opacity:1, x:0, duration:0.45, stagger:0.14, ease:EO}, 1.3);
+    },
+    tl => {
+      tl.call(() => { P.locked = false; knob.setAttribute('tabindex', '0'); knob.removeAttribute('aria-hidden'); }, null, 0)
+        .to([cutG, knob, cutLbl], {autoAlpha:1, duration:0.35, ease:EO}, 0)
+        .to(gr, {autoAlpha:1, duration:0.45, ease:EO}, 0.15)
+        .to(P, {s:3.62, duration:2.4, ease:EIO, onUpdate:() => setS(P.s)}, 0.6);
+    },
+    tl => { tl.set(peak, {autoAlpha:1}, 0); drawStroke(tl, peakBox, {duration:0.6, ease:EIO}, 0); tl.fromTo($$('text', peak), {opacity:0}, {opacity:1, duration:0.3, ease:EO}, 0.45); }
+  ];
+  S[7].P = P;
+}
+S[7] = {el:$('#s8'), lazy:buildS8, base(){}, steps:[() => {}, () => {}, () => {}, () => {}]};
+
+/* ---------- IX · revolución del perfil y comparación ---------- */
+function buildS9(){
+  const sv = $('#sv9'), g = el('g', {}, sv), cx = 520, cy = 490, k = 13, tilt = 0.22, gold = '#E9CB7C';
+  const prof = CER_OUT.filter((p, i) => i % 2 === 0).concat([[1.6, -15.9]]);
+  const flangeP = [[2.45, 1.0], [2.45, 0.55], [3.75, 0.55], [3.75, 0], [2.45, 0], [2.45, -0.9]];
+  const proj = (r, y, th) => [cx + k * r * Math.cos(th), cy - k * (y + 1.9) + k * r * Math.sin(th) * tilt];
+  const plane = el('rect', {x:cx, y:cy - k * 24.5, width:k * 6, height:k * 41.4 + 8, fill:'rgba(233,203,124,.08)', stroke:'rgba(233,203,124,.5)', 'stroke-width':1.2, 'stroke-dasharray':'6 5'}, g);
+  el('line', {x1:cx, x2:cx, y1:cy - k * 26, y2:cy + k * 19.5, stroke:'#F2EBDC', 'stroke-width':1.4, 'stroke-dasharray':'8 6'}, g);
+  text(g, cx + 8, cy - k * 26 + 4, 'eje z', {fs:19, fill:'#F2EBDC'});
+  const planeLbl = text(g, cx + k * 6 + 10, cy - k * 20, 'plano (r, z): dominio 2D', {fs:20, fill:gold});
+  const half = el('path', {d:'', fill:'rgba(233,203,124,.22)', stroke:gold, 'stroke-width':2}, g);
+  half.setAttribute('d', 'M' + [[0, 22.6]].concat([[0.8125, 22.6], [0.8125, 19.3]], prof, flangeP.length ? [] : [], [[0.8125, -15.9], [0.8125, -18.8], [0, -18.8]]).map(p => proj(p[0], p[1], 0).map(v => v.toFixed(1)).join(' ')).join('L') + 'Z');
+  const flangeHalf = el('path', {d:'M' + flangeP.map(p => proj(p[0], p[1], 0).map(v => v.toFixed(1)).join(' ')).join('L'), fill:'none', stroke:gold, 'stroke-width':2}, g);
+  const merid = el('g', {}, g), paral = el('path', {d:'', fill:'none', stroke:gold, 'stroke-width':1.3, 'stroke-opacity':0.75}, g);
+  const moving = el('path', {d:'', fill:'none', stroke:'#FFF4D6', 'stroke-width':2.6}, g);
+  const parY = [[1.9, 19.3]].concat([17.6, 15.2, 12.8, 10.4, 8.0, 5.6].map(yc => [4.53, yc - 0.1]), [[2.55, 3.2], [3.75, 0.55], [3.75, 0], [2.05, -0.9], [2.05, -9.6], [2.05, -12.4], [1.6, -15.9]]);
+  const MER = 12; const merEls = [];
+  for (let i = 0; i < MER; i++) merEls.push(el('path', {d:'', fill:'none', stroke:gold, 'stroke-width':1.2}, merid));
+  const meridD = th => 'M' + prof.concat(flangeP).map(p => proj(p[0], p[1], th).map(v => v.toFixed(1)).join(' ')).join('L');
+  const dial = el('g', {}, g), dcy = 752, drx = 72, dry = drx * tilt;
+  el('ellipse', {cx, cy:dcy, rx:drx, ry:dry, fill:'none', stroke:'rgba(233,203,124,.35)', 'stroke-width':1.2}, dial);
+  const dialArc = el('path', {d:'', fill:'none', stroke:gold, 'stroke-width':2.4}, dial);
+  const dialDot = el('circle', {r:5, fill:'#FFF4D6'}, dial);
+  const dialTxt = text(dial, cx + drx + 14, dcy + 7, 'φ = 0°', {fs:20, fill:gold, fw:700});
+  const R = {th:0};
+  function draw(){
+    const th = R.th;
+    { let d = ''; const n = Math.max(2, Math.ceil(th / 0.06)); for (let i = 0; i <= n && th > 0.001; i++){ const a = th * i / n; d += (i ? 'L' : 'M') + (cx + drx * Math.cos(a)).toFixed(1) + ' ' + (dcy + dry * Math.sin(a)).toFixed(1); }
+      dialArc.setAttribute('d', d); dialDot.setAttribute('cx', cx + drx * Math.cos(th)); dialDot.setAttribute('cy', dcy + dry * Math.sin(th));
+      dialTxt.textContent = 'φ = ' + Math.round(th * 180 / Math.PI) + '°'; }
+    moving.setAttribute('d', th > 0.001 && th < 2 * Math.PI - 0.001 ? meridD(th) : '');
+    merEls.forEach((m, i) => { const a = i * 2 * Math.PI / MER; if (a <= th + 1e-6 && th > 0.001){ m.setAttribute('d', meridD(a)); m.setAttribute('stroke-opacity', Math.sin(a) >= 0 ? 0.8 : 0.28); } else m.setAttribute('d', ''); });
+    let d = '';
+    if (th > 0.001) parY.forEach(([r, y]) => { const n = Math.max(2, Math.ceil(th / 0.08)); for (let i = 0; i <= n; i++){ const p = proj(r, y, th * i / n); d += (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); } });
+    paral.setAttribute('d', d);
+  }
+  /* comparación 3D / 2D con la misma escala */
+  const box = {x:1040, y:262, w:470, h:330}, VC9 = [-5.0, -4.3, 10.0, 7.02];
+  const cmpWrap = el('g', {}, sv);
+  const ns = nestSvg(cmpWrap, box, VC9);
+  placeImg(ns, MAPS.eLo, true); placeImg(ns, MAPS.eHi, true);
+  const out = el('g', {}, ns); buildSection(out, {both:true, ext:true, outline:true}); buildTank(out, true, {noOil:true, metal:'none'});
+  $$('path', out).forEach(p => { if (p.getAttribute('stroke') === '#262B3C') p.setAttribute('stroke', 'rgba(255,255,255,.55)'); });
+  const mask2d = el('rect', {x:-6, y:-5, width:6, height:9, fill:'#ECE3D1'}, ns);
+  const axis2d = el('line', {x1:0, x2:0, y1:-5, y2:4, stroke:'#18213F', 'stroke-width':0.05, 'stroke-dasharray':'.2 .12'}, ns);
+  const both = el('rect', {x:0.04, y:-4.26, width:4.92, height:6.94, fill:'none', stroke:'#E9CB7C', 'stroke-width':0.09, 'stroke-dasharray':'.3 .18'}, ns);
+  el('rect', {x:box.x, y:box.y, width:box.w, height:box.h, fill:'none', stroke:'#18213F', 'stroke-width':2}, cmpWrap);
+  colorbar(cmpWrap, 1560, 290, 300, 'E');
+  const cmpLbl = text(cmpWrap, box.x, box.y + box.h + 26, '', {fs:18, fill:'#3A4363'});
+  const cmpBtns = $$('[data-cmp]', $('#s9'));
+  function setCmp(m){
+    cmpBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cmp === m)));
+    gsap.set(mask2d, {opacity:m === '2d' ? 1 : 0}); gsap.set(axis2d, {opacity:m === '3d' ? 0 : 1}); gsap.set(both, {opacity:m === 'both' ? 1 : 0});
+    cmpLbl.textContent = m === '3d' ? 'Corte del modelo 3D en un plano que contiene el eje' : m === '2d' ? 'Modelo 2D: solo el semiplano r ≥ 0' : 'El semiplano 2D coincide con la mitad del corte 3D';
+  }
+  cmpBtns.forEach(b => b.addEventListener('click', () => setCmp(b.dataset.cmp)));
+  const capt = text(cmpWrap, box.x, box.y + box.h + 49, 'Esquema con los valores reportados; misma escala de 0 a 2,5 kV/mm en ambos modelos.', {fs:18, fill:'#3A4363', fw:400});
+  const cmpG = [ns, cmpLbl, capt]; void cmpG;
+  S[8].base = function(){ R.th = 0; draw(); setCmp('3d'); gsap.set([merid, paral, moving], {opacity:1}); gsap.set(plane, {opacity:1}); gsap.set(planeLbl, {opacity:1}); gsap.set(cmpWrap, {opacity:0}); void flangeHalf; void capt; };
+  S[8].steps = [ () => {},
+    tl => { tl.to(planeLbl, {opacity:0.4, duration:0.3}, 0).to(R, {th:2 * Math.PI, duration:2.6, ease:EIO, onUpdate:draw}, 0.1).to(plane, {opacity:0.35, duration:0.5}, 2.4); },
+    tl => { tl.to(cmpWrap, {opacity:1, duration:0.45, ease:EO}, 0.1); }, () => {}
+  ];
+}
+S[8] = {el:$('#s9'), lazy:buildS9, base(){}, steps:[() => {}, () => {}, () => {}, () => {}]};
+
+/* ---------- X · cierre ---------- */
+(function(){
+  const sv = $('#sv10'), k = 17, VB = frameVB(0, -1.9, k, 380, 560); sv.setAttribute('viewBox', VB.join(' '));
+  const fs = px => px / k;
+  buildExterior(sv);
+  const sec10 = buildSection(sv, {}), cp10 = el('clipPath', {id:'clip10', clipPathUnits:'userSpaceOnUse'}, el('defs', {}, sv));
+  const clip10 = el('rect', {x:0, y:-23.5, width:5, height:0}, cp10); sec10.g.setAttribute('clip-path', 'url(#clip10)');
+  const crit = el('g', {}, sv);
+  const critE = [el('ellipse', {cx:0.95, cy:-0.6, rx:0.75, ry:2.7, fill:'none', stroke:'#FFFFFF', 'stroke-width':0.3}, crit),
+                 el('ellipse', {cx:0.95, cy:-0.6, rx:0.75, ry:2.7, fill:'none', stroke:'#B3362B', 'stroke-width':0.16}, crit)];
+  const critL = el('path', {d:'M1.75 -0.6H7.0', stroke:'#F2EBDC', 'stroke-width':0.08}, crit);
+  text(crit, 7.3, -0.9, L.crit, {fs:fs(24), fill:'#F2EBDC', fw:700});
+  text(crit, 7.3, 0.6, 'aceite junto a la barra,', {fs:fs(20), fill:'#CFC7B6', fw:400});
+  text(crit, 7.3, 1.9, 'cerca de la brida', {fs:fs(20), fill:'#CFC7B6', fw:400});
+  S[9] = {
+    el:$('#s10'),
+    base(){ gsap.set(clip10, {attr:{height:0}}); gsap.set(crit, {opacity:1}); hideStroke(critE.concat(critL)); gsap.set($$('text', crit), {opacity:0}); },
+    steps:[
+      tl => {
+        tl.to(clip10, {attr:{height:43.5}, duration:0.9, ease:EIO}, 0.1);
+        drawStroke(tl, critE, {duration:0.7, ease:EIO}, 0.9);
+        drawStroke(tl, critL, {duration:0.4, ease:EO}, 1.4);
+        tl.fromTo($$('text', crit), {opacity:0, x:0.8}, {opacity:1, x:0, duration:0.4, stagger:0.08, ease:EO}, 1.6);
+      },
+      () => {},
+      tl => { finale(tl, 0.5); }
+    ]
+  };
+})();
+
+/* =====================================================================
+   7. Motor: escenas, pasos, transiciones y navegación
+   ===================================================================== */
+let cur = -1, step = 0, active = null, trans = null;
+const INSTANT = RM || !!gsap.isShim;
+const Y0 = RM ? 0 : 14;
+/* ---- ganchos para extensiones (ver codex/CONTRATO.md) ---- */
+const HOOKS = {ext:{}, reset:{}, ready:{}};
+const num = sc => S.indexOf(sc) + 1;
+function runReady(n){ (HOOKS.ready[n] || []).forEach(f => { try { f(S[n - 1].el); } catch (e) { console.error('BOQ.ready', n, e); } }); HOOKS.ready[n] = []; }
+function ensure(sc){ if (sc.lazy){ buildMaps(); const f = sc.lazy; sc.lazy = null; f(); runReady(num(sc)); } }
+function reveals(sc, k){ return $$('[data-step="' + k + '"]', sc.el); }
+function baseScene(sc){
+  ensure(sc); gsap.set($$('[data-step]', sc.el), {autoAlpha:0, y:Y0}); sc.base();
+  (HOOKS.reset[num(sc)] || []).forEach(f => { try { f(sc.el); } catch (e) { console.error('BOQ.reset', e); } });
+}
+function buildStep(sc, k){
+  const tl = gsap.timeline({paused:true, defaults:{ease:EO}});
+  const r = reveals(sc, k), at = (sc.revealAt && sc.revealAt[k] != null) ? sc.revealAt[k] : 0;
+  if (r.length) tl.to(r, {autoAlpha:1, y:0, duration:0.45, stagger:0.06, ease:EO}, at);
+  if (sc.steps[k]) sc.steps[k](tl);
+  (HOOKS.ext[num(sc) + ':' + k] || []).forEach(f => { try { f(tl, sc.el); } catch (e) { console.error('BOQ.extend', num(sc), k, e); } });
+  return tl;
+}
+window.BOQ = Object.freeze({
+  gsap, EO, EIO, RM, get instant(){ return INSTANT; }, hasDraw:HAS_DRAW,
+  drawStroke, hideStroke, el, text, fmt,
+  scene: n => S[n - 1].el,
+  steps: n => S[n - 1].steps.length,
+  extend(n, k, fn){ (HOOKS.ext[n + ':' + k] = HOOKS.ext[n + ':' + k] || []).push(fn); },
+  reset(n, fn){ (HOOKS.reset[n] = HOOKS.reset[n] || []).push(fn); },
+  ready(n, fn){ if (S[n - 1].lazy) (HOOKS.ready[n] = HOOKS.ready[n] || []).push(fn); else { try { fn(S[n - 1].el); } catch (e) { console.error('BOQ.ready', n, e); } } }
+});
+function finish(){
+  if (trans && trans.isActive && trans.isActive()) trans.progress(1);
+  if (active && active.isActive && active.isActive()) active.progress(1);
+}
+/* Movimiento reducido: el estado final aparece de inmediato y solo lo nuevo entra con un fundido breve */
+function gentle(sc, k){
+  if (!RM || gsap.isShim) return;
+  const r = reveals(sc, k); if (r.length) gsap.fromTo(r, {opacity:0}, {opacity:1, duration:0.2, ease:EO});
+}
+function showState(i, k, animate){
+  const sc = S[i]; finish(); baseScene(sc);
+  for (let j = 0; j < k; j++){ const t = buildStep(sc, j); t.progress(1); t.kill(); }
+  const t = buildStep(sc, k);
+  if (animate && !INSTANT){ active = t; t.play(); } else { t.progress(1); active = null; if (animate) gentle(sc, k); }
+  step = k; updateUI();
+}
+function playNextStep(){
+  const sc = S[cur], t = buildStep(sc, step + 1); step++;
+  if (INSTANT){ t.progress(1); active = null; gentle(sc, step); } else { active = t; t.play(); }
+  updateUI();
+}
+/* ---- coreografías de paso entre salas ---- */
+function resetFx(){
+  gsap.set([FX.L, FX.R, FX.seam, FX.cols, FX.cons, FX.relay], {autoAlpha:0});
+  gsap.set(FX.L, {xPercent:-100}); gsap.set(FX.R, {xPercent:100});
+}
+function pickTrans(a, b){
+  const A = S[a].el.dataset.ambient, B = S[b].el.dataset.ambient;
+  if (a === 4 && b === 5) return 'relevo';
+  if (A === 'sky' && B === 'marble') return 'puertas';
+  if (A === 'marble' && B === 'sky') return 'ascenso';
+  return A === 'marble' ? 'columnata' : 'constelacion';
+}
+const CHOREO = {
+  /* cielo → mármol: se cierran las puertas del templo, cambia la sala, se abren */
+  puertas(tl, a, b, dir, swap){
+    tl.set([FX.L, FX.R], {autoAlpha:1}, 0)
+      .fromTo(FX.L, {xPercent:-100}, {xPercent:0, duration:0.5, ease:EIO}, 0)
+      .fromTo(FX.R, {xPercent:100}, {xPercent:0, duration:0.5, ease:EIO}, 0)
+      .to(a, {autoAlpha:0, duration:0.35, ease:EO}, 0.1)
+      .fromTo(FX.seam, {autoAlpha:0, scaleY:0.2}, {autoAlpha:1, scaleY:1, duration:0.25, ease:EO}, 0.46)
+      .call(swap, null, 0.5)
+      .set(b, {autoAlpha:1, scale:1.05}, 0.55)
+      .to(FX.seam, {autoAlpha:0, duration:0.2, ease:EO}, 0.78)
+      .to(FX.L, {xPercent:-100, duration:0.65, ease:EIO}, 0.75)
+      .to(FX.R, {xPercent:100, duration:0.65, ease:EIO}, 0.75)
+      .to(b, {scale:1, duration:0.8, ease:EO}, 0.75)
+      .set([FX.L, FX.R], {autoAlpha:0}, 1.4);
+    return 1.0;
+  },
+  /* mármol → mármol: la cámara recorre la columnata; las columnas pasan en primer plano */
+  columnata(tl, a, b, dir, swap){
+    const s = dir > 0 ? 1 : -1;
+    tl.call(swap, null, 0)
+      .set(FX.cols, {autoAlpha:1}, 0)
+      .fromTo(FX.cols, {x:s > 0 ? 1950 : -2350}, {x:s > 0 ? -2350 : 1950, duration:1.0, ease:EIO}, 0)
+      .to(a, {autoAlpha:0, x:-s * 160, duration:0.55, ease:EIO}, 0.05)
+      .fromTo(b, {autoAlpha:0, x:s * 160}, {autoAlpha:1, x:0, duration:0.65, ease:EO}, 0.4)
+      .set(a, {x:0}, 0.7)
+      .set(FX.cols, {autoAlpha:0}, 1.0);
+    return 0.65;
+  },
+  /* cielo → cielo: atravesar el pórtico mientras una constelación une las dos salas */
+  constelacion(tl, a, b, dir, swap){
+    const ghost = $('#portico-ghost'), port = $('#portico');
+    FX.cons.innerHTML = '';
+    const R = rng(31 + cur * 7), n = 6, pts = [];
+    for (let j = 0; j < n; j++) pts.push([dir > 0 ? 260 + j * 280 : 1660 - j * 280, 200 + R() * 520]);
+    const path = el('path', {d:'M' + pts.map(q => q.map(v => v.toFixed(0)).join(' ')).join('L'), fill:'none', stroke:'rgba(243,217,142,.8)', 'stroke-width':1.6}, FX.cons);
+    const dots = pts.map(q => el('circle', {cx:q[0], cy:q[1], r:3.6, fill:'#FFF6D8'}, FX.cons));
+    hideStroke(path);
+    tl.call(swap, null, 0)
+      .set(FX.cons, {autoAlpha:1}, 0)
+      .fromTo(dots, {opacity:0}, {opacity:1, duration:0.2, stagger:0.11, ease:EO}, 0.02);
+    drawStroke(tl, path, {duration:0.75, ease:EIO}, 0.02);
+    tl.to(a, {autoAlpha:0, scale:dir > 0 ? 1.06 : 0.95, duration:0.45, ease:EO}, 0)
+      .fromTo(ghost, {opacity:1, scale:1}, {opacity:0, scale:dir > 0 ? 1.28 : 0.82, duration:0.75, ease:EO}, 0)
+      .fromTo(port, {opacity:0, scale:dir > 0 ? 0.9 : 1.1}, {opacity:1, scale:1, duration:0.7, ease:EO}, 0.12)
+      .fromTo('#stars', {scale:dir > 0 ? 0.94 : 1.06, transformOrigin:'50% 50%'}, {scale:1, duration:1.0, ease:EO}, 0)
+      .fromTo(b, {autoAlpha:0, scale:dir > 0 ? 0.95 : 1.05}, {autoAlpha:1, scale:1, duration:0.6, ease:EO}, 0.3)
+      .set(a, {scale:1}, 0.8)
+      .to(FX.cons, {autoAlpha:0, duration:0.35, ease:EO}, 0.95);
+    return 0.5;
+  },
+  /* mármol → cielo: la cámara sube; el templo queda abajo y baja el cielo */
+  ascenso(tl, a, b, dir, swap){
+    tl.to(a, {autoAlpha:0, y:dir > 0 ? 110 : -110, duration:0.55, ease:EIO}, 0)
+      .call(swap, null, 0.1)
+      .fromTo('#stars', {y:dir > 0 ? -240 : 240}, {y:0, duration:1.15, ease:EO}, 0.05)
+      .fromTo('#constel', {y:dir > 0 ? -160 : 160}, {y:0, duration:1.15, ease:EO}, 0.05)
+      .fromTo(b, {autoAlpha:0, y:dir > 0 ? -70 : 70}, {autoAlpha:1, y:0, duration:0.7, ease:EO}, 0.42)
+      .set(a, {y:0}, 0.6);
+    hideStroke(CONST_LINES); drawStroke(tl, CONST_LINES, {duration:0.9, ease:EIO, stagger:0.1}, 0.3);
+    return 0.6;
+  },
+  /* relevo V → VI: sube al cielo y se presenta el segundo expositor */
+  relevo(tl, a, b, dir, swap){
+    tl.to(a, {autoAlpha:0, y:110, duration:0.55, ease:EIO}, 0)
+      .call(swap, null, 0.15)
+      .fromTo('#stars', {y:-240}, {y:0, duration:1.3, ease:EO}, 0.05)
+      .set(a, {y:0}, 0.6)
+      .set(b, {autoAlpha:0}, 0)
+      .fromTo(FX.relay, {autoAlpha:0, scale:0.96, y:18}, {autoAlpha:1, scale:1, y:0, duration:0.55, ease:EO}, 0.4)
+      .fromTo(FX.relayStars, {opacity:0, scale:0.6, transformOrigin:'50% 50%'}, {opacity:1, scale:1, duration:0.3, stagger:0.08, ease:EO}, 0.6);
+    hideStroke(FX.relayLine); drawStroke(tl, FX.relayLine, {duration:0.55, ease:EIO}, 0.62);
+    tl.to(FX.relay, {autoAlpha:0, y:-26, duration:0.35, ease:EO}, 1.3)
+      .fromTo(b, {autoAlpha:0, scale:0.97}, {autoAlpha:1, scale:1, duration:0.6, ease:EO}, 1.3);
+    return 1.45;
+  }
+};
+/* obertura: al abrir la presentación, las puertas del Santuario se abren */
+function overture(tl, b){
+  tl.set([FX.L, FX.R], {autoAlpha:1, xPercent:0}, 0)
+    .set(FX.seam, {autoAlpha:1, scaleY:1}, 0)
+    .set(b, {autoAlpha:1, scale:1.06}, 0)
+    .to(FX.seam, {autoAlpha:0, duration:0.35, ease:EO}, 0.55)
+    .to(FX.L, {xPercent:-100, duration:1.15, ease:EIO}, 0.6)
+    .to(FX.R, {xPercent:100, duration:1.15, ease:EIO}, 0.6)
+    .to(b, {scale:1, duration:1.5, ease:EO}, 0.6)
+    .set([FX.L, FX.R], {autoAlpha:0}, 1.8);
+  return 1.05;
+}
+function goScene(i, k, dir){
+  finish();
+  const from = cur >= 0 ? S[cur] : null, to = S[i];
+  if (from === to){ showState(i, k, true); return; }
+  const prev = cur; cur = i;
+  baseScene(to);
+  let entry = null;
+  if (k === 0){ entry = buildStep(to, 0); }
+  else { for (let j = 0; j <= k; j++){ const t = buildStep(to, j); t.progress(1); t.kill(); } }
+  step = k;
+  S.forEach((s, j) => s.el.setAttribute('aria-hidden', String(j !== i)));
+  const swap = () => { document.body.classList.toggle('marble', to.el.dataset.ambient === 'marble'); $('#numeral').textContent = ROMAN[i]; };
+  resetFx();
+  if (!from && !INSTANT){
+    const tl = gsap.timeline(); swap();
+    const at = overture(tl, to.el);
+    if (entry){ active = entry; tl.add(entry.paused(false), at); }
+    trans = tl;
+  } else if (INSTANT){
+    swap();
+    if (entry) entry.progress(1);
+    if (from && RM && !gsap.isShim){
+      /* movimiento reducido: fundido corto entre escenas, sin escala ni desplazamiento */
+      const tl = gsap.timeline();
+      tl.set(to.el, {scale:1}).fromTo(to.el, {autoAlpha:0}, {autoAlpha:1, duration:0.2, ease:EO}, 0).to(from.el, {autoAlpha:0, duration:0.2, ease:EO}, 0);
+      trans = tl;
+    } else {
+      if (from) gsap.set(from.el, {autoAlpha:0, scale:1});
+      gsap.set(to.el, {autoAlpha:1, scale:1});
+      trans = null;
+    }
+  } else {
+    const tl = gsap.timeline(), type = pickTrans(prev, i);
+    gsap.set(to.el, {autoAlpha:0, scale:1, x:0, y:0});
+    const at = CHOREO[type === 'relevo' && dir < 0 ? 'ascenso' : type](tl, from.el, to.el, dir, swap);
+    traceNav(tl, prev, i);
+    if (entry){ active = entry; tl.add(entry.paused(false), at); }
+    trans = tl;
+  }
+  if (!entry) active = null;
+  try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) { /* archivo local */ }
+  updateUI(); announce();
+}
+function next(){
+  finish();
+  if (step < S[cur].steps.length - 1) playNextStep();
+  else if (cur < S.length - 1) goScene(cur + 1, 0, 1);
+}
+function prev(){
+  finish();
+  if (step > 0) showState(cur, step - 1, false);
+  else if (cur > 0) goScene(cur - 1, S[cur - 1].steps.length - 1, -1);
+}
+function replay(){ finish(); showState(cur, step, true); }
+function skip(){
+  const busy = (trans && trans.isActive && trans.isActive()) || (active && active.isActive && active.isActive());
+  if (busy){ finish(); return; }
+  showState(cur, S[cur].steps.length - 1, false);
+}
+
+/* ---- escalinata de estrellas ---- */
+const stairs = $('#stairs'), ssv = $('#stairs-svg');
+const SX = i => 40 + i * 76 + (i >= 5 ? 40 : 0), SY = i => 60 - i * 2.4;
+const starD = r => `M0 ${-r}L${0.26 * r} ${-0.26 * r}L${r} 0L${0.26 * r} ${0.26 * r}L0 ${r}L${-0.26 * r} ${0.26 * r}L${-r} 0L${-0.26 * r} ${-0.26 * r}Z`;
+const segs = [];
+for (let i = 0; i < 9; i++) segs.push(el('line', {x1:SX(i), y1:SY(i), x2:SX(i + 1), y2:SY(i + 1), stroke:'rgba(207,199,182,.35)', 'stroke-width':1.6, 'stroke-dasharray':i === 4 ? '3 5' : '0'}, ssv));
+const traceLine = el('path', {d:'', fill:'none', stroke:'#F3D98E', 'stroke-width':2.4}, ssv);
+const stars = [], starBtns = [];
+for (let i = 0; i < 10; i++){
+  const g = el('g', {transform:`translate(${SX(i)} ${SY(i)})`}, ssv);
+  const halo = el('circle', {r:19, fill:'none', stroke:'#E9CB7C', 'stroke-width':1.5, opacity:0}, g);
+  const st = el('path', {d:starD(9), fill:'none', stroke:'#CFC7B6', 'stroke-width':1.4}, g);
+  stars.push({g, halo, st});
+  const b = document.createElement('button');
+  b.className = 'star-btn'; b.type = 'button'; b.style.left = SX(i) + 'px'; b.style.top = SY(i) + 'px';
+  b.setAttribute('aria-label', `Escena ${ROMAN[i]}: ${META[i][0]}`);
+  b.addEventListener('click', () => { if (i !== cur) goScene(i, 0, i > cur ? 1 : -1); });
+  stairs.appendChild(b); starBtns.push(b);
+  const lb = document.createElement('span'); lb.className = 'star-lbl'; lb.textContent = ROMAN[i];
+  lb.style.left = SX(i) + 'px'; lb.style.top = (SY(i) + 19) + 'px'; stairs.appendChild(lb);
+}
+{ const t1 = document.createElement('span'); t1.className = 'star-lbl'; t1.textContent = 'Expositor 1'; t1.style.left = ((SX(0) + SX(4)) / 2) + 'px'; t1.style.top = '4px'; stairs.appendChild(t1);
+  const t2 = document.createElement('span'); t2.className = 'star-lbl'; t2.textContent = 'Expositor 2'; t2.style.left = ((SX(5) + SX(9)) / 2) + 'px'; t2.style.top = '4px'; stairs.appendChild(t2); }
+function traceNav(tl, a, b){
+  if (a < 0) return;
+  const lo = Math.min(a, b), hi = Math.max(a, b);
+  let d = 'M' + SX(lo) + ' ' + SY(lo); for (let i = lo + 1; i <= hi; i++) d += 'L' + SX(i) + ' ' + SY(i);
+  traceLine.setAttribute('d', d); hideStroke(traceLine);
+  if (HAS_DRAW && b < a) tl.fromTo(traceLine, {drawSVG:'100% 100%'}, {drawSVG:'0% 100%', duration:0.6, ease:EIO}, 0);
+  else drawStroke(tl, traceLine, {duration:0.6, ease:EIO}, 0);
+  tl.to(traceLine, {opacity:0, duration:0.3}, 0.75).set(traceLine, {opacity:1, attr:{d:''}}, 1.05);
+}
+function updateUI(){
+  stars.forEach((s, i) => {
+    const on = i === cur, done = i < cur;
+    s.st.setAttribute('d', starD(on ? 13 : 9));
+    s.st.setAttribute('fill', on || done ? '#E9CB7C' : 'none');
+    s.st.setAttribute('stroke', on || done ? '#E9CB7C' : '#CFC7B6');
+    s.halo.setAttribute('opacity', on ? 1 : 0);
+    if (on) starBtns[i].setAttribute('aria-current', 'step'); else starBtns[i].removeAttribute('aria-current');
+  });
+  segs.forEach((l, i) => l.setAttribute('stroke', i < cur ? 'rgba(233,203,124,.85)' : 'rgba(207,199,182,.35)'));
+  const n = S[cur].steps.length;
+  $('#steps-ind').innerHTML = `Paso <b>${step + 1}</b>/${n}`;
+  $('#speaker').innerHTML = `<b>Expositor ${META[cur][1]}</b>≈ ${META[cur][2]} s`;
+  $('#b-prev').disabled = cur === 0 && step === 0;
+  $('#b-next').disabled = cur === S.length - 1 && step === n - 1;
+}
+const live = document.createElement('div'); live.className = 'sr-only'; live.setAttribute('aria-live', 'polite'); $('#stage').appendChild(live);
+function announce(){ live.textContent = `Escena ${cur + 1} de 10: ${META[cur][0]}.`; }
+
+/* ---- botones y teclado ---- */
+$('#b-next').addEventListener('click', next);
+$('#b-prev').addEventListener('click', prev);
+$('#b-replay').addEventListener('click', replay);
+$('#b-skip').addEventListener('click', skip);
+$('#b-fs').addEventListener('click', toggleFS);
+function toggleFS(){
+  const d = document;
+  if (!d.fullscreenElement) (d.documentElement.requestFullscreen || function(){}).call(d.documentElement);
+  else (d.exitFullscreen || function(){}).call(d);
+}
+const backup = $('#backup'), scrim = $('#scrim'), tabs = $$('[role="tab"]', backup);
+function openBackup(){ backup.classList.add('open'); scrim.classList.add('open'); tabs.find(t => t.getAttribute('aria-selected') === 'true').focus(); }
+function closeBackup(){ backup.classList.remove('open'); scrim.classList.remove('open'); $('#b-backup').focus(); }
+function selectTab(t){ tabs.forEach(x => { const on = x === t; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1; $('#' + x.getAttribute('aria-controls')).hidden = !on; }); t.focus(); }
+tabs.forEach((t, i) => {
+  t.tabIndex = i === 0 ? 0 : -1;
+  t.addEventListener('click', () => selectTab(t));
+  t.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown'){ selectTab(tabs[(i + 1) % tabs.length]); e.preventDefault(); }
+    if (e.key === 'ArrowUp'){ selectTab(tabs[(i - 1 + tabs.length) % tabs.length]); e.preventDefault(); }
+  });
+});
+$('#b-backup').addEventListener('click', openBackup);
+$('#bk-close').addEventListener('click', closeBackup);
+scrim.addEventListener('click', closeBackup);
+document.addEventListener('keydown', e => {
+  if (backup.classList.contains('open')){
+    if (e.key === 'Escape'){ closeBackup(); e.preventDefault(); }
+    if (e.key === 'Tab'){
+      const f = $$('button:not([tabindex="-1"]), [tabindex="0"]', backup); const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
+      else if (!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
+    }
+    return;
+  }
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  const onBtn = e.target && e.target.tagName === 'BUTTON';
+  switch (e.key){
+    case 'ArrowRight': case 'PageDown': next(); e.preventDefault(); break;
+    case 'ArrowLeft': case 'PageUp': prev(); e.preventDefault(); break;
+    case ' ': if (!onBtn){ next(); e.preventDefault(); } break;
+    case 'Home': goScene(0, 0, -1); e.preventDefault(); break;
+    case 'End': goScene(S.length - 1, 0, 1); e.preventDefault(); break;
+    case 'r': case 'R': replay(); break;
+    case 's': case 'S': skip(); break;
+    case 'f': case 'F': toggleFS(); break;
+    case 'b': case 'B': openBackup(); e.preventDefault(); break;
+    default:
+      if (/^[0-9]$/.test(e.key)){ const i = e.key === '0' ? 9 : +e.key - 1; if (i !== cur) goScene(i, 0, i > cur ? 1 : -1); }
+  }
+});
+
+/* cierre: la escalinata de las diez salas se enciende de I a X y queda estable */
+let FIN = null;
+function finale(tl, at){
+  if (!FIN){ let d = 'M' + SX(0) + ' ' + SY(0); for (let i = 1; i < 10; i++) d += 'L' + SX(i) + ' ' + SY(i); FIN = el('path', {d, fill:'none', stroke:'#FFF6D8', 'stroke-width':2.6}, ssv); }
+  hideStroke(FIN); tl.set(FIN, {opacity:1}, at);
+  drawStroke(tl, FIN, {duration:1.1, ease:EIO}, at);
+  tl.fromTo(stars.map(s => s.st), {scale:1, transformOrigin:'50% 50%'}, {scale:1.55, duration:0.2, yoyo:true, repeat:1, stagger:0.09, ease:EO}, at)
+    .to(FIN, {opacity:0, duration:0.5, ease:EO}, at + 1.4);
+}
+
+/* ---- escala a la ventana ---- */
+function fit(){
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080), st = $('#stage');
+  st.style.transform = `translate(${(innerWidth - 1920 * s) / 2}px, ${(innerHeight - 1080 * s) / 2}px) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+/* ---- ecuaciones (KaTeX; si no carga, queda el texto Unicode) ---- */
+if (window.katex) $$('[data-tex]').forEach(n => { try { window.katex.render(n.dataset.tex, n, {throwOnError:false, displayMode:false}); } catch (err) { /* texto de respaldo */ } });
+
+/* ---- inicio ---- */
+S.forEach(s => gsap.set(s.el, {autoAlpha:0}));
+(window.BOQ_EXT || []).forEach(f => { try { f(window.BOQ); } catch (e) { console.error('BOQ_EXT', e); } });
+const h0 = parseInt((location.hash || '').slice(1), 10);
+goScene(h0 >= 1 && h0 <= 10 ? h0 - 1 : 0, 0, 1);
+/* precalcula los mapas en segundo plano para que VII a IX abran sin espera */
+setTimeout(() => { S.forEach((s, i) => { if (s.lazy){ const f = s.lazy; s.lazy = null; buildMaps(); f(); runReady(i + 1); if (i !== cur) baseScene(s); } }); }, 1800);
+}
+</script>
+</body>
+</html>
